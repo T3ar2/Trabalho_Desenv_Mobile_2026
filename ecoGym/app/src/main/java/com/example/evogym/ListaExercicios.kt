@@ -49,6 +49,10 @@ fun ListaExerciciosScreen(
         Treino(nome = "Yoga de Flexibilidade", professor = "Prof. Ana Costa", imagem = R1.drawable.yoga)
     )
 
+    val listaFiltrada = listaDeTreinos.filter { treino ->
+        treino.nome.contains(textoBusca, ignoreCase = true)
+    }
+
     Column(modifier = modifier) {
 
         // Topbar roxa
@@ -94,7 +98,7 @@ fun ListaExerciciosScreen(
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            items(listaDeTreinos) { treino ->
+            items(listaFiltrada) { treino ->
                 CardTreino(treino = treino)
             }
         }
