@@ -61,18 +61,17 @@ fun ListaExerciciosScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color(46, 45, 77))
-                .padding(start = 16.dp, end = 16.dp, top = 0.dp, bottom = 10.dp)
+                .padding(start = 16.dp, end = 0.dp, top = 0.dp, bottom = 10.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = "<",
                     color = Color.White,
                     fontSize = 22.sp,
-                    lineHeight = 22.sp,
+                    fontWeight = FontWeight.Bold,
                     modifier = modifier
-                        .padding(end = 10.dp)
+                        .padding(end = 20.dp)
                         .clickable {
-
                         Toast.makeText(context, "Voltar para outra tela", Toast.LENGTH_SHORT).show()
                     }
 
@@ -84,7 +83,8 @@ fun ListaExerciciosScreen(
                     text = "Lista de Exercícios",
                     color = Color.White,
                     fontSize = 26.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    modifier = modifier
                 )
 
             }
