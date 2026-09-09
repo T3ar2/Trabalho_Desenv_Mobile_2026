@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -18,7 +17,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,14 +32,24 @@ import androidx.compose.ui.unit.sp
 import com.example.evogym.R as R1
 import androidx.compose.ui.platform.LocalContext
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.ui.Alignment
+import com.example.evogym.ui.theme.AzulEscuro
+import com.example.evogym.ui.theme.BrancoBackground
+import com.example.evogym.ui.theme.AzulTiffany
+
 
 @Composable
 fun ListaExerciciosScreen(
     modifier: Modifier = Modifier
+
 ) {
     var textoBusca by remember { mutableStateOf("") }
     val context = LocalContext.current
+    var filtroSelecionado by remember { mutableStateOf<String?>(null) }  //
 
     val listaDeTreinos = listOf(
         Treino(nome = "Treino para Iniciantes", professor = "Prof. Joan Mendes", imagem = R1.drawable.mulher_barra),
@@ -54,7 +62,9 @@ fun ListaExerciciosScreen(
         treino.nome.contains(textoBusca, ignoreCase = true)
     }
 
-    Column(modifier = modifier) {
+    Column(modifier = modifier
+        .fillMaxWidth()
+        .background(BrancoBackground)) {
 
         // Topbar roxa
         Column(
@@ -67,12 +77,12 @@ fun ListaExerciciosScreen(
                 Text(
                     text = "<",
                     color = Color.White,
-                    fontSize = 22.sp,
+                    fontSize = 26.sp,
                     fontWeight = FontWeight.Bold,
                     modifier = modifier
                         .padding(end = 20.dp)
                         .clickable {
-                        Toast.makeText(context, "Voltar para outra tela", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Voltar para tela inicial", Toast.LENGTH_SHORT).show()
                     }
 
                 )
@@ -80,7 +90,7 @@ fun ListaExerciciosScreen(
                 //Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    text = "Lista de Exercícios",
+                    text = "Lista Exercícios",
                     color = Color.White,
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Bold,
@@ -88,24 +98,66 @@ fun ListaExerciciosScreen(
                 )
 
             }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = {}, shape = RoundedCornerShape(16.dp)) {
-                        Text("Força")
-                    }
-                    Button(onClick = {}, shape = RoundedCornerShape(16.dp)) {
-                        Text("Mobilidade")
-                    }
-                    Button(onClick = {}, shape = RoundedCornerShape(16.dp)) {
-                        Text("Resistência")
-                    }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = { filtroSelecionado = if (filtroSelecionado == "Força") null else "Força" },
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (filtroSelecionado == "Força") AzulTiffany else Color.White.copy(alpha = 0.05f)
+                    ),
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = if (filtroSelecionado == "Força") Color.Transparent else Color.White.copy(alpha = 0.1f)
+                    )
+                ) {
+                    Text("Força")
                 }
+
+                Button(
+                    onClick = { filtroSelecionado = if (filtroSelecionado == "Mobilidade") null else "Mobilidade" },
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (filtroSelecionado == "Mobilidade") AzulTiffany else Color.White.copy(alpha = 0.05f)
+                    ),
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = if (filtroSelecionado == "Mobilidade") Color.Transparent else Color.White.copy(alpha = 0.1f)
+                    )
+                ) {
+                    Text("Mobilidade")
+                }
+
+                Button(
+                    onClick = { filtroSelecionado = if (filtroSelecionado == "Resistência") null else "Resistência" },
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (filtroSelecionado == "Resistência") AzulTiffany else Color.White.copy(alpha = 0.05f)
+                    ),
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = if (filtroSelecionado == "Resistência") Color.Transparent else Color.White.copy(alpha = 0.1f)
+                    )
+                ) {
+                    Text("Resistência")
+                }
+            }
         }
 
         // Barra de busca
-        TextField(
+        OutlinedTextField(
             value = textoBusca,
             onValueChange = { novoTexto -> textoBusca = novoTexto },
-            placeholder = { Text("Buscar Exercício") },
+            placeholder = { Text("Buscar exercício...", color = Color.Gray) },
+            shape = RoundedCornerShape(16.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                focusedBorderColor = Color.LightGray,
+                unfocusedBorderColor = Color.LightGray,
+                focusedTextColor = AzulEscuro,
+                unfocusedTextColor = AzulEscuro,
+                cursorColor = AzulTiffany
+            ),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(20.dp)
@@ -134,8 +186,12 @@ fun CardTreino(treino: Treino) {
         shape = RoundedCornerShape(16.dp)
     ) {
         Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier
+                .background(color = Color.White) //background card
+                .padding(12.dp),
+
+            verticalAlignment = Alignment.CenterVertically,
+
         ) {
             //trocar por Image depois
             Image(
