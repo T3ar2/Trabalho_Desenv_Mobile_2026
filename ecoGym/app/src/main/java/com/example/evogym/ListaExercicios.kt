@@ -1,9 +1,9 @@
 package com.example.evogym.ui
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -28,9 +28,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.evogym.R as R1
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
 
 @Composable
 fun ListaExerciciosScreen(
@@ -39,10 +43,10 @@ fun ListaExerciciosScreen(
     var textoBusca by remember { mutableStateOf("") }
 
     val listaDeTreinos = listOf(
-        Treino(nome = "Treino para Iniciantes", professor = "Prof. Joan Mendes"),
-        Treino(nome = "Treino de Full Body", professor = "Prof. Pedro Lima"),
-        Treino(nome = "Alongamentos Dinâmicos", professor = "Prof. Ana Costa"),
-        Treino(nome = "Yoga de Flexibilidade", professor = "Prof. Ana Costa")
+        Treino(nome = "Treino para Iniciantes", professor = "Prof. Joan Mendes", imagem = R1.drawable.mulher_barra),
+        Treino(nome = "Treino de Full Body", professor = "Prof. Pedro Lima", imagem = R1.drawable.homem_barra),
+        Treino(nome = "Alongamentos Dinâmicos", professor = "Prof. Ana Costa", imagem = R1.drawable.alongamento),
+        Treino(nome = "Yoga de Flexibilidade", professor = "Prof. Ana Costa", imagem = R1.drawable.yoga)
     )
 
     Column(modifier = modifier) {
@@ -99,6 +103,9 @@ fun ListaExerciciosScreen(
 
 @Composable
 fun CardTreino(treino: Treino) {
+
+    val context = LocalContext.current
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -110,11 +117,12 @@ fun CardTreino(treino: Treino) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             //trocar por Image depois
-            Box(
+            Image(
+                painter = painterResource(id = treino.imagem),
+                contentDescription = "Foto do treino",
                 modifier = Modifier
                     .size(56.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color.LightGray)
             )
 
             Spacer(modifier = Modifier.width(12.dp))
@@ -136,7 +144,7 @@ fun CardTreino(treino: Treino) {
                 color = Color(0xFF2ECC71),
                 fontSize = 20.sp,
                 modifier = Modifier.clickable {
-                    // definir acao
+                    Toast.makeText(context, "Abrindo vídeo: ${treino.nome}", Toast.LENGTH_SHORT).show()
                 }
             )
         }
@@ -145,5 +153,6 @@ fun CardTreino(treino: Treino) {
 
 data class Treino(
     val nome: String,
-    val professor: String
+    val professor: String,
+    val imagem: Int
 )
