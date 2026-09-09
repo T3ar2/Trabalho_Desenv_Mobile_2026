@@ -24,7 +24,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -35,12 +34,14 @@ import androidx.compose.ui.unit.sp
 import com.example.evogym.R as R1
 import androidx.compose.ui.platform.LocalContext
 import android.widget.Toast
+import androidx.compose.ui.Alignment
 
 @Composable
 fun ListaExerciciosScreen(
     modifier: Modifier = Modifier
 ) {
     var textoBusca by remember { mutableStateOf("") }
+    val context = LocalContext.current
 
     val listaDeTreinos = listOf(
         Treino(nome = "Treino para Iniciantes", professor = "Prof. Joan Mendes", imagem = R1.drawable.mulher_barra),
@@ -60,28 +61,44 @@ fun ListaExerciciosScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color(46, 45, 77))
-                .padding(start = 16.dp, end = 16.dp, top = 30.dp, bottom = 16.dp)
+                .padding(start = 16.dp, end = 16.dp, top = 0.dp, bottom = 10.dp)
         ) {
-            Text(
-                text = "Lista de Exercícios",
-                color = Color.White,
-                fontSize = 25.sp,
-                fontWeight = FontWeight.Bold
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "<",
+                    color = Color.White,
+                    fontSize = 22.sp,
+                    lineHeight = 22.sp,
+                    modifier = modifier
+                        .padding(end = 10.dp)
+                        .clickable {
 
-            Spacer(modifier = Modifier.height(12.dp))
+                        Toast.makeText(context, "Voltar para outra tela", Toast.LENGTH_SHORT).show()
+                    }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = {}, shape = RoundedCornerShape(16.dp)) {
-                    Text("Força")
-                }
-                Button(onClick = {}, shape = RoundedCornerShape(16.dp)) {
-                    Text("Mobilidade")
-                }
-                Button(onClick = {}, shape = RoundedCornerShape(16.dp)) {
-                    Text("Resistência")
-                }
+                )
+
+                //Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "Lista de Exercícios",
+                    color = Color.White,
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Bold
+                )
+
             }
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = {}, shape = RoundedCornerShape(16.dp)) {
+                        Text("Força")
+                    }
+                    Button(onClick = {}, shape = RoundedCornerShape(16.dp)) {
+                        Text("Mobilidade")
+                    }
+                    Button(onClick = {}, shape = RoundedCornerShape(16.dp)) {
+                        Text("Resistência")
+                    }
+                }
         }
 
         // Barra de busca
@@ -144,7 +161,7 @@ fun CardTreino(treino: Treino) {
             }
 
             Text(
-                text = ">",
+                text = ">>",
                 color = Color(0xFF2ECC71),
                 fontSize = 20.sp,
                 modifier = Modifier.clickable {
