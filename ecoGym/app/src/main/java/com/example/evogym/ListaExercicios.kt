@@ -52,14 +52,16 @@ fun ListaExerciciosScreen(
     var filtroSelecionado by remember { mutableStateOf<String?>(null) }  //
 
     val listaDeTreinos = listOf(
-        Treino(nome = "Treino para Iniciantes", professor = "Prof. Joan Mendes", imagem = R1.drawable.mulher_barra),
-        Treino(nome = "Treino de Full Body", professor = "Prof. Pedro Lima", imagem = R1.drawable.homem_barra),
-        Treino(nome = "Alongamentos Dinâmicos", professor = "Prof. Ana Costa", imagem = R1.drawable.alongamento),
-        Treino(nome = "Yoga de Flexibilidade", professor = "Prof. Ana Costa", imagem = R1.drawable.yoga)
+        Treino(nome = "Treino para Iniciantes", professor = "Prof. Joan Mendes", imagem = R1.drawable.mulher_barra, categoria = "Força"),
+        Treino(nome = "Treino de Full Body", professor = "Prof. Pedro Lima", imagem = R1.drawable.homem_barra, categoria = "Força"),
+        Treino(nome = "Alongamentos Dinâmicos", professor = "Prof. Ana Costa", imagem = R1.drawable.alongamento, categoria = "Mobilidade"),
+        Treino(nome = "Yoga de Flexibilidade", professor = "Prof. Ana Costa", imagem = R1.drawable.yoga, categoria = "Resistência")
     )
 
     val listaFiltrada = listaDeTreinos.filter { treino ->
-        treino.nome.contains(textoBusca, ignoreCase = true)
+        val passaNoTexto = treino.nome.contains(textoBusca, ignoreCase = true)
+        val passaNaCategoria = filtroSelecionado == null || treino.categoria == filtroSelecionado
+        passaNoTexto && passaNaCategoria
     }
 
     Column(modifier = modifier
@@ -231,5 +233,6 @@ fun CardTreino(treino: Treino) {
 data class Treino(
     val nome: String,
     val professor: String,
-    val imagem: Int
+    val imagem: Int,
+    val categoria: String
 )
