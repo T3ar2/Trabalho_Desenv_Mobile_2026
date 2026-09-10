@@ -42,6 +42,7 @@ import com.example.evogym.ui.theme.BrancoBackground
 import com.example.evogym.ui.theme.AzulTiffany
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Icon
 
@@ -81,7 +82,7 @@ fun ListaExerciciosScreen(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                    imageVector = Icons.Default.ArrowBack,
                     contentDescription = "Voltar",
                     tint = Color.White,
                     modifier = modifier
