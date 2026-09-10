@@ -40,6 +40,10 @@ import androidx.compose.ui.Alignment
 import com.example.evogym.ui.theme.AzulEscuro
 import com.example.evogym.ui.theme.BrancoBackground
 import com.example.evogym.ui.theme.AzulTiffany
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Icon
 
 
 @Composable
@@ -77,17 +81,14 @@ fun ListaExerciciosScreen(
                 .padding(start = 16.dp, end = 0.dp, top = 0.dp, bottom = 10.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "<",
-                    color = Color.White,
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.Bold,
+                Icon(
+                    imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
+                    contentDescription = "Voltar",
+                    tint = Color.White,
                     modifier = modifier
-                        .padding(end = 20.dp)
-                        .clickable {
-                        onVoltarClick()
-                    }
-
+                        .size(26.dp)
+                        .padding(end = 5.dp)
+                        .clickable { onVoltarClick() }
                 )
 
                 //Spacer(modifier = Modifier.height(12.dp))
@@ -219,13 +220,15 @@ fun CardTreino(treino: Treino) {
                 )
             }
 
-            Text(
-                text = ">>",
-                color = Color(0xFF2ECC71),
-                fontSize = 20.sp,
-                modifier = Modifier.clickable {
-                    Toast.makeText(context, "Abrindo vídeo: ${treino.nome}", Toast.LENGTH_SHORT).show()
-                }
+            Icon(
+                imageVector = Icons.Default.PlayArrow,
+                contentDescription = "Tocar treino",
+                tint = AzulTiffany,
+                modifier = Modifier
+                    .size(20.dp)
+                    .clickable {
+                        Toast.makeText(context, "Abrindo vídeo: ${treino.nome}", Toast.LENGTH_SHORT).show()
+                    }
             )
         }
     }
