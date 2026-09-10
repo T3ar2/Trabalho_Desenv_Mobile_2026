@@ -54,7 +54,7 @@ fun ListaExerciciosScreen(
 ) {
     var textoBusca by remember { mutableStateOf("") }
     val context = LocalContext.current
-    var filtroSelecionado by remember { mutableStateOf<String?>(null) }  //
+    var filtroSelecionado by remember { mutableStateOf<String?>(null) }
 
     val listaDeTreinos = listOf(
         Treino(nome = "Treino para Iniciantes", professor = "Prof. Joan Mendes", imagem = R1.drawable.mulher_barra, categoria = "Força"),
@@ -73,7 +73,6 @@ fun ListaExerciciosScreen(
         .fillMaxWidth()
         .background(BrancoBackground)) {
 
-        // Topbar roxa
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -90,8 +89,6 @@ fun ListaExerciciosScreen(
                         .padding(end = 5.dp)
                         .clickable { onVoltarClick() }
                 )
-
-                //Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
                     text = "Lista Exercícios",
@@ -147,7 +144,6 @@ fun ListaExerciciosScreen(
             }
         }
 
-        // Barra de busca
         OutlinedTextField(
             value = textoBusca,
             onValueChange = { novoTexto -> textoBusca = novoTexto },
@@ -167,7 +163,6 @@ fun ListaExerciciosScreen(
                 .padding(20.dp)
         )
 
-        // Lista de cards
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
@@ -191,13 +186,12 @@ fun CardTreino(treino: Treino) {
     ) {
         Row(
             modifier = Modifier
-                .background(color = Color.White) //background card
+                .background(color = Color.White)
                 .padding(12.dp),
 
             verticalAlignment = Alignment.CenterVertically,
 
         ) {
-            //trocar por Image depois
             Image(
                 painter = painterResource(id = treino.imagem),
                 contentDescription = "Foto do treino",
