@@ -31,18 +31,6 @@ class MainActivity : ComponentActivity() {
                 var mostrarListaProfessores by rememberSaveable { mutableStateOf(false) }
                 var mostrarPainelUsuario by rememberSaveable { mutableStateOf(false) }
 
-                BackHandler(enabled = mostrarListaExercicios) {
-                    mostrarListaExercicios = false
-                }
-
-                BackHandler(enabled = mostrarListaProfessores) {
-                    mostrarListaProfessores = false
-                }
-                BackHandler(enabled = mostrarPainelUsuario) {
-                    mostrarPainelUsuario = false
-                }
-
-
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     if (mostrarListaExercicios) {
                         ListaExerciciosScreen(
