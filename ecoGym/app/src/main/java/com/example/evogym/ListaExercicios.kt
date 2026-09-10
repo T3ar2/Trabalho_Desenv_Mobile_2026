@@ -44,7 +44,8 @@ import com.example.evogym.ui.theme.AzulTiffany
 
 @Composable
 fun ListaExerciciosScreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onVoltarClick: () -> Unit = {}
 
 ) {
     var textoBusca by remember { mutableStateOf("") }
@@ -84,7 +85,7 @@ fun ListaExerciciosScreen(
                     modifier = modifier
                         .padding(end = 20.dp)
                         .clickable {
-                        Toast.makeText(context, "Voltar para tela inicial", Toast.LENGTH_SHORT).show()
+                        onVoltarClick()
                     }
 
                 )
