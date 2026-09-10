@@ -31,6 +31,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -43,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.evogym.ui.ListaExerciciosScreen
 import com.example.evogym.ui.theme.EvoGymTheme
 import com.example.evogym.ui.theme.HomeScreenBackground
 import com.example.evogym.ui.theme.HomeScreenCardBackground1
@@ -55,10 +60,20 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             EvoGymTheme {
+                var telaAtual by remember { mutableStateOf("home") }
+
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    HomeScreen(
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                    when (telaAtual) {
+                        "home" -> HomeScreen(
+                            modifier = Modifier.padding(innerPadding),
+                            onExerciciosClick = { telaAtual = "exercicios" }
+                        )
+                        "exercicios" -> ListaExerciciosScreen(
+                            modifier = Modifier
+                                .padding(innerPadding),
+                            onVoltarClick = { telaAtual = "home" }
+                        )
+                    }
                 }
             }
         }
@@ -66,7 +81,9 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier) {
+fun HomeScreen(modifier: Modifier = Modifier,
+               onExerciciosClick: () -> Unit = {}
+) {
 
 
     Column(
@@ -107,7 +124,8 @@ fun HomeScreen(modifier: Modifier = Modifier) {
                     text = "Exercícios",
                     icon = Icons.Outlined.FitnessCenter,
                     backgroundColor = HomeScreenCardBackground1,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    onClick = onExerciciosClick
                 )
             }
             Row(
@@ -138,9 +156,11 @@ fun Cards(
     text: String,
     icon: ImageVector,
     backgroundColor: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {}
 ) {
     Surface(
+        onClick = onClick,
         modifier = modifier.height(130.dp),
         shape = RoundedCornerShape(16.dp),
         color = backgroundColor,
