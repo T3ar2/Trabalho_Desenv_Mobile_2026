@@ -93,11 +93,11 @@ fun CadastroScreen(
         Button(onClick = {
             if (nome.isBlank() || email.isBlank() || senha.isBlank()){
                 Toast.makeText(context,
-                    "Preencha todos so campos",
+                    "Preencha todos os campos",
                     Toast.LENGTH_SHORT)
                     .show()
             }else{
-                if (AuthManager.cadastro(nome, email, senha)){
+                if (AuthManager.cadastro(context, nome, email, senha)){
                     Toast.makeText(context,
                         "Cadastro realizado com Sucesso!",
                         Toast.LENGTH_SHORT

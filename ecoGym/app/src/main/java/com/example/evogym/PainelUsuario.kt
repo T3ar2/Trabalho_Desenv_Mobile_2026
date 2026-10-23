@@ -1,5 +1,6 @@
 package com.example.evogym.ui
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,22 +13,36 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.evogym.ui.theme.AzulEscuro
 import com.example.evogym.ui.theme.AzulTiffany
 import com.example.evogym.ui.theme.BrancoBackground
+import com.example.myapplication.auth.AuthManager
 
 data class Usuario(
     val nome: String,
@@ -57,8 +72,26 @@ fun usuarioExemplo() = Usuario(
 fun PainelUsuarioScreen(
     usuario: Usuario = usuarioExemplo(),
     modifier: Modifier = Modifier,
-    onVoltarClick: () -> Unit = {}
+    onVoltarClick: () -> Unit = {},
+    onDeslogarClick: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val usuarioSessao = AuthManager.usuarioLogado
+
+    // Se houver usuário na sessão SQLite, usamos seus dados; senão, fallback para o parâmetro
+    val nomeAtual = usuarioSessao?.nome ?: usuario.nome
+    val idadeAtual = usuarioSessao?.idade ?: usuario.idade
+    val alturaAtual = usuarioSessao?.altura ?: usuario.altura
+    val planoAtual = usuarioSessao?.plano ?: usuario.plano
+    val pesoAtual = usuarioSessao?.peso ?: usuario.peso
+    val professorAtual = usuarioSessao?.professor ?: usuario.professor
+    val treinosAtual = usuarioSessao?.treinos ?: usuario.treinos
+    val seguidoresAtual = usuarioSessao?.seguidores ?: usuario.seguidores
+    val diasSeguidosAtual = usuarioSessao?.diasSeguidos ?: usuario.diasSeguidos
+
+    var exibirDialogoEditar by remember { mutableStateOf(false) }
+    var exibirDialogoExcluir by remember { mutableStateOf(false) }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -92,6 +125,7 @@ fun PainelUsuarioScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -102,7 +136,7 @@ fun PainelUsuarioScreen(
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(
-                        text = usuario.nome.take(1),
+                        text = nomeAtual.take(1).ifEmpty { "U" },
                         color = Color.White,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold
@@ -111,24 +145,184 @@ fun PainelUsuarioScreen(
             }
 
             Spacer(Modifier.height(12.dp))
-            Text(usuario.nome, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+            Text(nomeAtual, fontWeight = FontWeight.Bold, fontSize = 20.sp)
             Spacer(Modifier.height(12.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Badge("${usuario.treinos} Treinos")
-                Badge("${usuario.seguidores} Seguidores")
-                Badge("${usuario.diasSeguidos} Dias Seguidos")
+                Badge("$treinosAtual Treinos")
+                Badge("$seguidoresAtual Seguidores")
+                Badge("$diasSeguidosAtual Dias Seguidos")
             }
 
             Spacer(Modifier.height(24.dp))
 
-            InfoRow("Nome", usuario.nome)
-            InfoRow("Idade", "${usuario.idade} anos")
-            InfoRow("Altura", usuario.altura)
-            InfoRow("Plano", usuario.plano)
-            InfoRow("Peso", usuario.peso)
-            InfoRow("Professor Vinculado", usuario.professor)
+            InfoRow("Nome", nomeAtual)
+            InfoRow("Idade", "$idadeAtual anos")
+            InfoRow("Altura", alturaAtual)
+            InfoRow("Plano", planoAtual)
+            InfoRow("Peso", pesoAtual)
+            InfoRow("Professor Vinculado", professorAtual)
+
+            Spacer(Modifier.height(32.dp))
+
+            // ==========================================
+            // BOTÕES DO CRUD (UPDATE, DELETE e LOGOUT)
+            // ==========================================
+            Button(
+                onClick = { exibirDialogoEditar = true },
+                colors = ButtonDefaults.buttonColors(containerColor = AzulTiffany),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Editar Perfil (Update SQLite)", color = Color.White)
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            OutlinedButton(
+                onClick = { exibirDialogoExcluir = true },
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD32F2F)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Excluir Conta (Delete SQLite)")
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            TextButton(
+                onClick = {
+                    AuthManager.logout()
+                    Toast.makeText(context, "Sessão encerrada", Toast.LENGTH_SHORT).show()
+                    onDeslogarClick()
+                }
+            ) {
+                Text("Sair da Conta (Logout)", color = Color.Gray)
+            }
         }
+    }
+
+    // ==========================================
+    // DIÁLOGO DE EDIÇÃO (UPDATE)
+    // ==========================================
+    if (exibirDialogoEditar) {
+        var editNome by remember { mutableStateOf(nomeAtual) }
+        var editIdade by remember { mutableStateOf(idadeAtual.toString()) }
+        var editAltura by remember { mutableStateOf(alturaAtual) }
+        var editPeso by remember { mutableStateOf(pesoAtual) }
+        var editPlano by remember { mutableStateOf(planoAtual) }
+        var editProfessor by remember { mutableStateOf(professorAtual) }
+
+        AlertDialog(
+            onDismissRequest = { exibirDialogoEditar = false },
+            title = { Text("Editar Perfil") },
+            text = {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = editNome,
+                        onValueChange = { editNome = it },
+                        label = { Text("Nome") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = editIdade,
+                        onValueChange = { editIdade = it },
+                        label = { Text("Idade") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = editAltura,
+                        onValueChange = { editAltura = it },
+                        label = { Text("Altura") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = editPeso,
+                        onValueChange = { editPeso = it },
+                        label = { Text("Peso") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = editPlano,
+                        onValueChange = { editPlano = it },
+                        label = { Text("Plano") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = editProfessor,
+                        onValueChange = { editProfessor = it },
+                        label = { Text("Professor") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val idadeInt = editIdade.toIntOrNull() ?: idadeAtual
+                        val sucesso = AuthManager.atualizarPerfil(
+                            context = context,
+                            nome = editNome,
+                            idade = idadeInt,
+                            altura = editAltura,
+                            peso = editPeso,
+                            plano = editPlano,
+                            professor = editProfessor
+                        )
+                        if (sucesso) {
+                            Toast.makeText(context, "Perfil atualizado no SQLite!", Toast.LENGTH_SHORT).show()
+                            exibirDialogoEditar = false
+                        } else {
+                            Toast.makeText(context, "Erro ao atualizar perfil", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = AzulTiffany)
+                ) {
+                    Text("Salvar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { exibirDialogoEditar = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
+
+    // ==========================================
+    // DIÁLOGO DE EXCLUSÃO (DELETE)
+    // ==========================================
+    if (exibirDialogoExcluir) {
+        AlertDialog(
+            onDismissRequest = { exibirDialogoExcluir = false },
+            title = { Text("Confirmar Exclusão") },
+            text = { Text("Tem certeza que deseja excluir sua conta permanentemente do banco de dados?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val sucesso = AuthManager.excluirConta(context)
+                        if (sucesso) {
+                            Toast.makeText(context, "Conta excluída do SQLite com sucesso!", Toast.LENGTH_LONG).show()
+                            exibirDialogoExcluir = false
+                            onDeslogarClick()
+                        } else {
+                            Toast.makeText(context, "Erro ao excluir conta", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
+                ) {
+                    Text("Sim, excluir", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { exibirDialogoExcluir = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 }
 
@@ -155,4 +349,4 @@ fun InfoRow(label: String, valor: String) {
         Text(label, color = Color.Gray)
         Text(valor, fontWeight = FontWeight.Medium)
     }
-}
+}

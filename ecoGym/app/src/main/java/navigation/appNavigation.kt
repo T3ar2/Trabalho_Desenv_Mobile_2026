@@ -68,7 +68,12 @@ fun AppNavigation(navController: NavHostController, modifier: Modifier = Modifie
             PainelUsuarioScreen(
                 usuario = usuarioExemplo(),
                 modifier = Modifier,
-                onVoltarClick = { navController.popBackStack() }
+                onVoltarClick = { navController.popBackStack() },
+                onDeslogarClick = {
+                    navController.navigate(Login) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
             )
         }
     }

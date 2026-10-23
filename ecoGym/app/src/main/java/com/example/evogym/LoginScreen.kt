@@ -82,9 +82,11 @@ fun LoginScreen(
         Spacer(Modifier.height(16.dp))
 
         Button(onClick = {
-            if (AuthManager.login(email, senha)){
+            if (email.isBlank() || senha.isBlank()) {
+                Toast.makeText(context, "Preencha todos os campos!", Toast.LENGTH_SHORT).show()
+            } else if (AuthManager.login(context, email, senha)){
                 loginSucesso()
-            }else{
+            } else {
                 Toast.makeText(context,
                     "E-mail ou Senha Inválido!",
                     Toast.LENGTH_SHORT
