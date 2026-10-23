@@ -26,7 +26,6 @@ object AuthManager {
     }
 
     fun atualizarPerfil(
-        context: Context,
         nome: String,
         idade: Int,
         altura: String,
@@ -66,4 +65,4 @@ object AuthManager {
     fun logout() {
         usuarioLogado = null
     }
-}
+}

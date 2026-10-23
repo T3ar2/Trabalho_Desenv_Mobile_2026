@@ -165,16 +165,14 @@ fun PainelUsuarioScreen(
 
             Spacer(Modifier.height(32.dp))
 
-            // ==========================================
-            // BOTÕES DO CRUD (UPDATE, DELETE e LOGOUT)
-            // ==========================================
+            // crud buttons
             Button(
                 onClick = { exibirDialogoEditar = true },
                 colors = ButtonDefaults.buttonColors(containerColor = AzulTiffany),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Editar Perfil (Update SQLite)", color = Color.White)
+                Text("Editar Perfil", color = Color.White)
             }
 
             Spacer(Modifier.height(8.dp))
@@ -185,7 +183,7 @@ fun PainelUsuarioScreen(
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD32F2F)),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Excluir Conta (Delete SQLite)")
+                Text("Excluir Conta")
             }
 
             Spacer(Modifier.height(8.dp))
@@ -197,14 +195,12 @@ fun PainelUsuarioScreen(
                     onDeslogarClick()
                 }
             ) {
-                Text("Sair da Conta (Logout)", color = Color.Gray)
+                Text("Sair da Conta", color = Color.Gray)
             }
         }
     }
 
-    // ==========================================
-    // DIÁLOGO DE EDIÇÃO (UPDATE)
-    // ==========================================
+    // edição de conta
     if (exibirDialogoEditar) {
         var editNome by remember { mutableStateOf(nomeAtual) }
         var editIdade by remember { mutableStateOf(idadeAtual.toString()) }
@@ -273,7 +269,7 @@ fun PainelUsuarioScreen(
                             professor = editProfessor
                         )
                         if (sucesso) {
-                            Toast.makeText(context, "Perfil atualizado no SQLite!", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Perfil atualizado.", Toast.LENGTH_SHORT).show()
                             exibirDialogoEditar = false
                         } else {
                             Toast.makeText(context, "Erro ao atualizar perfil", Toast.LENGTH_SHORT).show()
@@ -292,9 +288,7 @@ fun PainelUsuarioScreen(
         )
     }
 
-    // ==========================================
-    // DIÁLOGO DE EXCLUSÃO (DELETE)
-    // ==========================================
+    //exclusão de conta
     if (exibirDialogoExcluir) {
         AlertDialog(
             onDismissRequest = { exibirDialogoExcluir = false },
@@ -349,4 +343,4 @@ fun InfoRow(label: String, valor: String) {
         Text(label, color = Color.Gray)
         Text(valor, fontWeight = FontWeight.Medium)
     }
-}
+}
