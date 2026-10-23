@@ -78,7 +78,6 @@ fun PainelUsuarioScreen(
     val context = LocalContext.current
     val usuarioSessao = AuthManager.usuarioLogado
 
-    // Se houver usuário na sessão SQLite, usamos seus dados; senão, fallback para o parâmetro
     val nomeAtual = usuarioSessao?.nome ?: usuario.nome
     val idadeAtual = usuarioSessao?.idade ?: usuario.idade
     val alturaAtual = usuarioSessao?.altura ?: usuario.altura
@@ -200,7 +199,6 @@ fun PainelUsuarioScreen(
         }
     }
 
-    // edição de conta
     if (exibirDialogoEditar) {
         var editNome by remember { mutableStateOf(nomeAtual) }
         var editIdade by remember { mutableStateOf(idadeAtual.toString()) }
@@ -288,7 +286,6 @@ fun PainelUsuarioScreen(
         )
     }
 
-    //exclusão de conta
     if (exibirDialogoExcluir) {
         AlertDialog(
             onDismissRequest = { exibirDialogoExcluir = false },

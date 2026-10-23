@@ -84,7 +84,6 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         return db.insert(TABLE_USUARIOS, null, values)
     }
 
-1
     fun autenticar(email: String, senha: String): UsuarioData? {
         val db = readableDatabase
         val cursor = db.query(
