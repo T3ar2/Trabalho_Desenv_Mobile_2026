@@ -31,7 +31,8 @@ object AuthManager {
         altura: String,
         peso: String,
         plano: String,
-        professor: String
+        professor: String,
+        context: Context
     ): Boolean {
         val email = usuarioLogado?.email ?: return false
         val db = DatabaseHelper(context)

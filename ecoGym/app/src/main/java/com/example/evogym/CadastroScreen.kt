@@ -21,6 +21,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,6 +33,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.myapplication.auth.AuthManager
+import kotlinx.coroutines.delay
 
 @Composable
 fun CadastroScreen(
@@ -41,7 +43,15 @@ fun CadastroScreen(
     var email by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
     var senhaVisivel by remember { mutableStateOf(false) }
+    var cadastroConcluido by remember { mutableStateOf(false) }
     val context = LocalContext.current
+
+    LaunchedEffect(cadastroConcluido) {
+        if (cadastroConcluido) {
+            delay(1500)
+            irLogin()
+        }
+    }
 
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -102,7 +112,7 @@ fun CadastroScreen(
                         "Cadastro realizado com Sucesso!",
                         Toast.LENGTH_SHORT
                     ).show()
-                    irLogin()
+                    cadastroConcluido = true
                 }else{
                     Toast.makeText(context,
                         "E-mail já cadastrado!",

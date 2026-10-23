@@ -66,7 +66,6 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         onCreate(db)
     }
 
-    // CREATE: inserir novo usuário
     fun inserirUsuario(nome: String, email: String, senha: String): Long {
         val db = writableDatabase
         val values = ContentValues().apply {
@@ -85,8 +84,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         return db.insert(TABLE_USUARIOS, null, values)
     }
 
-  
-    // READ: Autenticacao por email e senha
+1
     fun autenticar(email: String, senha: String): UsuarioData? {
         val db = readableDatabase
         val cursor = db.query(
@@ -106,8 +104,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         }
     }
 
-  
-    // READ: Busca email
+
     fun buscarPorEmail(email: String): UsuarioData? {
         val db = readableDatabase
         val cursor = db.query(
@@ -128,7 +125,6 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
     }
 
 
-    // UPDATE: Atualizando dados do perfil de usuario.
     fun atualizarUsuario(
         emailOriginal: String,
         novoNome: String,
@@ -150,7 +146,6 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         return db.update(TABLE_USUARIOS, values, "$COL_EMAIL = ?", arrayOf(emailOriginal))
     }
 
-    // DELETE: Excluir conta de usuário
     fun excluirUsuario(email: String): Int {
         val db = writableDatabase
         return db.delete(TABLE_USUARIOS, "$COL_EMAIL = ?", arrayOf(email))
