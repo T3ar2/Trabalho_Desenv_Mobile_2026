@@ -1,4 +1,4 @@
-package com.example.myapplication.ui.screens
+package com.example.evogym.ui.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -19,6 +19,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,26 +30,42 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavDeepLink
-import com.example.myapplication.auth.AuthManager
+import com.example.evogym.auth.AuthManager
+import kotlinx.coroutines.delay
 
 @Composable
-fun LoginScreen(
-    loginSucesso: () -> Unit,
-    irCadastro: () -> Unit
+fun CadastroScreen(
+    irLogin: () -> Unit
 ){
+    var nome by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
     var senhaVisivel by remember { mutableStateOf(false) }
+    var cadastroConcluido by remember { mutableStateOf(false) }
     val context = LocalContext.current
+
+    LaunchedEffect(cadastroConcluido) {
+        if (cadastroConcluido) {
+            delay(1500)
+            irLogin()
+        }
+    }
 
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Login:", style = MaterialTheme.typography.headlineLarge)
+        Text(text = "Cadastro:", style = MaterialTheme.typography.headlineLarge)
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+        OutlinedTextField(
+            value = nome,
+            onValueChange = { nome = it },
+            label = { Text("Nome") },
+            modifier = Modifier.fillMaxWidth()
+        )
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
@@ -82,23 +99,32 @@ fun LoginScreen(
         Spacer(Modifier.height(16.dp))
 
         Button(onClick = {
-            if (email.isBlank() || senha.isBlank()) {
-                Toast.makeText(context, "Preencha todos os campos!", Toast.LENGTH_SHORT).show()
-            } else if (AuthManager.login(context, email, senha)){
-                loginSucesso()
-            } else {
+            if (nome.isBlank() || email.isBlank() || senha.isBlank()){
                 Toast.makeText(context,
-                    "E-mail ou Senha Inválido!",
-                    Toast.LENGTH_SHORT
-                ).show()
+                    "Preencha todos os campos",
+                    Toast.LENGTH_SHORT)
+                    .show()
+            }else{
+                if (AuthManager.cadastro(context, nome, email, senha)){
+                    Toast.makeText(context,
+                        "Cadastro realizado com Sucesso!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    cadastroConcluido = true
+                }else{
+                    Toast.makeText(context,
+                        "E-mail já cadastrado!",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
             }
         }, modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Entrar")
+            Text("Cadastrar")
         }
 
-        TextButton(onClick = irCadastro) {
-            Text("Não tem conta? Cadastre-se")
+        TextButton(onClick = irLogin) {
+            Text("Já tenho cadastro.")
         }
     }
 }

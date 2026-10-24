@@ -1,4 +1,4 @@
-package com.example.evogym.ui
+package com.example.evogym.ui.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -42,7 +42,7 @@ import androidx.compose.ui.unit.sp
 import com.example.evogym.ui.theme.AzulEscuro
 import com.example.evogym.ui.theme.AzulTiffany
 import com.example.evogym.ui.theme.BrancoBackground
-import com.example.myapplication.auth.AuthManager
+import com.example.evogym.auth.AuthManager
 
 data class Usuario(
     val nome: String,

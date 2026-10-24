@@ -1,30 +1,18 @@
-package com.example.evogym.data
+package com.example.evogym.data.local
 
 import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-
-data class UsuarioData(
-    val id: Long = 0,
-    val nome: String,
-    val email: String,
-    val senha: String,
-    val idade: Int = 25,
-    val altura: String = "1.70 m",
-    val peso: String = "70 kg",
-    val plano: String = "Mensal",
-    val professor: String = "Joan Mendes",
-    val treinos: Int = 0,
-    val seguidores: Int = 0,
-    val diasSeguidos: Int = 0
-)
+import com.example.evogym.data.model.Exercicio
+import com.example.evogym.data.model.UsuarioData
 
 class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     companion object {
         private const val DATABASE_NAME = "ecogym.db"
-        private const val DATABASE_VERSION = 1
+        // A versão 3 força a criação da tabela em instalações que já tinham o banco na versão 2.
+        private const val DATABASE_VERSION = 3
 
         const val TABLE_USUARIOS = "usuarios"
         const val COL_ID = "id"
@@ -39,6 +27,11 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         const val COL_TREINOS = "treinos"
         const val COL_SEGUIDORES = "seguidores"
         const val COL_DIAS_SEGUIDOS = "dias_seguidos"
+
+        const val TABLE_EXERCICIOS = "exercicios"
+        const val COL_EXERCICIO_ID = "id"
+        const val COL_EXERCICIO_NOME = "nome"
+        const val COL_EXERCICIO_CATEGORIA = "categoria"
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -59,11 +52,17 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             )
         """.trimIndent()
         db.execSQL(createTable)
+        criarTabelaExercicios(db)
+        inserirExerciciosIniciais(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        db.execSQL("DROP TABLE IF EXISTS $TABLE_USUARIOS")
-        onCreate(db)
+        // Não apagamos os usuários durante uma atualização de banco.
+        // IF NOT EXISTS permite executar a migração mesmo se a tabela já existir.
+        if (oldVersion < 3) {
+            criarTabelaExercicios(db)
+            inserirExerciciosIniciais(db)
+        }
     }
 
     fun inserirUsuario(nome: String, email: String, senha: String): Long {
@@ -150,6 +149,85 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         return db.delete(TABLE_USUARIOS, "$COL_EMAIL = ?", arrayOf(email))
     }
 
+    fun inserirExercicio(nome: String, categoria: String): Long {
+        val values = ContentValues().apply {
+            put(COL_EXERCICIO_NOME, nome)
+            put(COL_EXERCICIO_CATEGORIA, categoria)
+        }
+        return writableDatabase.insert(TABLE_EXERCICIOS, null, values)
+    }
+
+    fun listarExercicios(): List<Exercicio> {
+        val exercicios = mutableListOf<Exercicio>()
+        val cursor = readableDatabase.query(
+            TABLE_EXERCICIOS,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "$COL_EXERCICIO_NOME ASC"
+        )
+        cursor.use {
+            while (it.moveToNext()) {
+                exercicios.add(extrairExercicio(it))
+            }
+        }
+        return exercicios
+    }
+
+    fun atualizarExercicio(exercicio: Exercicio): Int {
+        val values = ContentValues().apply {
+            put(COL_EXERCICIO_NOME, exercicio.nome)
+            put(COL_EXERCICIO_CATEGORIA, exercicio.categoria)
+        }
+        return writableDatabase.update(
+            TABLE_EXERCICIOS,
+            values,
+            "$COL_EXERCICIO_ID = ?",
+            arrayOf(exercicio.id.toString())
+        )
+    }
+
+    fun excluirExercicio(id: Long): Int = writableDatabase.delete(
+        TABLE_EXERCICIOS,
+        "$COL_EXERCICIO_ID = ?",
+        arrayOf(id.toString())
+    )
+
+    private fun criarTabelaExercicios(db: SQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS $TABLE_EXERCICIOS (
+                $COL_EXERCICIO_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COL_EXERCICIO_NOME TEXT NOT NULL,
+                $COL_EXERCICIO_CATEGORIA TEXT NOT NULL
+            )
+            """.trimIndent()
+        )
+    }
+
+    private fun inserirExerciciosIniciais(db: SQLiteDatabase) {
+        val quantidade = db.rawQuery("SELECT COUNT(*) FROM $TABLE_EXERCICIOS", null).use {
+            it.moveToFirst()
+            it.getInt(0)
+        }
+        if (quantidade > 0) return
+
+        listOf(
+            Triple("Treino para Iniciantes", "Prof. Joan Mendes", "Força"),
+            Triple("Treino de Full Body", "Prof. Pedro Lima", "Força"),
+            Triple("Alongamentos Dinâmicos", "Prof. Ana Costa", "Mobilidade"),
+            Triple("Yoga de Flexibilidade", "Prof. Ana Costa", "Resistência")
+        ).forEach { (nome, professor, categoria) ->
+            val values = ContentValues().apply {
+                put(COL_EXERCICIO_NOME, nome)
+                put(COL_EXERCICIO_CATEGORIA, categoria)
+            }
+            db.insert(TABLE_EXERCICIOS, null, values)
+        }
+    }
+
     private fun extrairUsuario(cursor: android.database.Cursor): UsuarioData {
         return UsuarioData(
             id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_ID)),
@@ -166,4 +244,10 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             diasSeguidos = cursor.getInt(cursor.getColumnIndexOrThrow(COL_DIAS_SEGUIDOS))
         )
     }
+
+    private fun extrairExercicio(cursor: android.database.Cursor): Exercicio = Exercicio(
+        id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_EXERCICIO_ID)),
+        nome = cursor.getString(cursor.getColumnIndexOrThrow(COL_EXERCICIO_NOME)),
+        categoria = cursor.getString(cursor.getColumnIndexOrThrow(COL_EXERCICIO_CATEGORIA))
+    )
 }

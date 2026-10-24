@@ -1,4 +1,4 @@
-package com.example.evogym
+package com.example.evogym.ui.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background

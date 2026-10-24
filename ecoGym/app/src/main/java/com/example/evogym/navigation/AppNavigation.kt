@@ -1,17 +1,19 @@
-package com.example.myapplication.navigation
+package com.example.evogym.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.evogym.CadastroScreen
-import com.example.evogym.HomeScreen
-import com.example.evogym.ListaDeProfessores
-import com.example.evogym.ui.ListaExerciciosScreen
-import com.example.evogym.ui.PainelUsuarioScreen
-import com.example.evogym.ui.usuarioExemplo
-import com.example.myapplication.ui.screens.LoginScreen
+import com.example.evogym.ui.screens.CadastroScreen
+import com.example.evogym.ui.screens.HomeScreen
+import com.example.evogym.ui.screens.ListaDeProfessores
+import com.example.evogym.ui.screens.ListaExerciciosScreen
+import com.example.evogym.ui.screens.LoginScreen
+import com.example.evogym.ui.screens.PainelUsuarioScreen
+import com.example.evogym.ui.screens.usuarioExemplo
+import com.example.evogym.ui.viewmodel.ExerciciosViewModel
 
 @Composable
 fun AppNavigation(navController: NavHostController, modifier: Modifier = Modifier) {
@@ -60,7 +62,8 @@ fun AppNavigation(navController: NavHostController, modifier: Modifier = Modifie
         composable<ListaExercicios> {
             ListaExerciciosScreen(
                 modifier = Modifier,
-                onVoltarClick = { navController.popBackStack() }
+                onVoltarClick = { navController.popBackStack() },
+                viewModel = viewModel<ExerciciosViewModel>()
             )
         }
 

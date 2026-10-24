@@ -1,8 +1,8 @@
-package com.example.myapplication.auth
+package com.example.evogym.auth
 
 import android.content.Context
-import com.example.evogym.data.DatabaseHelper
-import com.example.evogym.data.UsuarioData
+import com.example.evogym.data.local.DatabaseHelper
+import com.example.evogym.data.model.UsuarioData
 
 object AuthManager {
     var usuarioLogado: UsuarioData? = null

@@ -12,8 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.evogym.ui.theme.EvoGymTheme
-import com.example.myapplication.navigation.AppNavigation
-import com.example.myapplication.navigation.Menu
+import com.example.evogym.navigation.AppNavigation
+import com.example.evogym.navigation.Menu
 
 class MainActivity : ComponentActivity() {
 
