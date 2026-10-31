@@ -1,5 +1,6 @@
-package com.example.evogym
+package com.example.evogym.ui.screens
 
+import com.example.evogym.R
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -39,7 +40,7 @@ fun ListaDeProfessores(
         Professor(
             nome = "Joan Mendes",
             especialidade = "Crossfit e Força",
-            imagemId = R.drawable.joan_mendez
+            imagemId = R.drawable.joan_mendes
         ),
 
         Professor(
@@ -56,9 +57,9 @@ fun ListaDeProfessores(
 
 
         Professor(
-            nome = "Joan Mendes",
+            nome = "Joana Mendes",
             especialidade = "Flexibilidade e Prevenção",
-            imagemId = R.drawable.pedrinho
+            imagemId = R.drawable.joan_mendes2
         )
     )
 

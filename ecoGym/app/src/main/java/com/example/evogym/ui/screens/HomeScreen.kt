@@ -1,4 +1,4 @@
-package com.example.evogym
+package com.example.evogym.ui.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -38,7 +38,8 @@ import com.example.evogym.ui.theme.HomeScreenCardBackground2
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier,
                onExerciciosClick: () -> Unit = {},
-               onProfessoresClick: () -> Unit = {}
+               onProfessoresClick: () -> Unit = {},
+               onPerfilClick: () -> Unit = {}
 ) {
 
 
@@ -99,7 +100,8 @@ fun HomeScreen(modifier: Modifier = Modifier,
                     text = "Perfil",
                     icon = Icons.Outlined.Person,
                     backgroundColor = HomeScreenCardBackground2,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    onClick = onPerfilClick
                 )
             }
         }
