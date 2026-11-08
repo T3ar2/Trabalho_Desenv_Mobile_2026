@@ -19,9 +19,9 @@ object AuthManager {
         }
     }
 
-    fun cadastro(context: Context, nome: String, email: String, senha: String): Boolean {
+    fun cadastro(context: Context, nome: String, email: String, senha: String, cep: String, endereco: String ): Boolean {
         val db = DatabaseHelper(context)
-        val resultado = db.inserirUsuario(nome.trim(), email.trim(), senha)
+        val resultado = db.inserirUsuario(nome.trim(), email.trim(), senha, cep, endereco)
         return resultado != -1L
     }
 

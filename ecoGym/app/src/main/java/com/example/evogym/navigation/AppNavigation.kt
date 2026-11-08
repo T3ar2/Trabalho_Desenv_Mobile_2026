@@ -9,10 +9,12 @@ import androidx.navigation.compose.composable
 import com.example.evogym.ui.screens.CadastroScreen
 import com.example.evogym.ui.screens.HomeScreen
 import com.example.evogym.ui.screens.ListaDeProfessores
+import com.example.evogym.ui.screens.ListaEquipamentosScreen
 import com.example.evogym.ui.screens.ListaExerciciosScreen
 import com.example.evogym.ui.screens.LoginScreen
 import com.example.evogym.ui.screens.PainelUsuarioScreen
 import com.example.evogym.ui.screens.usuarioExemplo
+import com.example.evogym.ui.viewmodel.EquipamentosViewModel
 import com.example.evogym.ui.viewmodel.ExerciciosViewModel
 
 @Composable
@@ -30,25 +32,20 @@ fun AppNavigation(navController: NavHostController, modifier: Modifier = Modifie
                         popUpTo(Login) { inclusive = true }
                     }
                 },
-                irCadastro = {
-                    navController.navigate(Cadastro)
-                }
+                irCadastro = { navController.navigate(Cadastro) }
             )
         }
 
         composable<Cadastro> {
-            CadastroScreen(
-                irLogin = {
-                    navController.popBackStack()
-                }
-            )
+            CadastroScreen(irLogin = { navController.popBackStack() })
         }
 
         composable<HomeScreen> {
             HomeScreen(
                 onExerciciosClick = { navController.navigate(ListaExercicios) },
                 onProfessoresClick = { navController.navigate(ListaDeProfessores) },
-                onPerfilClick = { navController.navigate(PainelUsuario) }
+                onPerfilClick = { navController.navigate(PainelUsuario) },
+                onEquipamentoClick = { navController.navigate(ListaEquipamentos) }
             )
         }
 
@@ -64,6 +61,14 @@ fun AppNavigation(navController: NavHostController, modifier: Modifier = Modifie
                 modifier = Modifier,
                 onVoltarClick = { navController.popBackStack() },
                 viewModel = viewModel<ExerciciosViewModel>()
+            )
+        }
+
+        composable<ListaEquipamentos> {
+            ListaEquipamentosScreen(
+                modifier = Modifier,
+                onVoltarClick = { navController.popBackStack() },
+                viewModel = viewModel<EquipamentosViewModel>()
             )
         }
 

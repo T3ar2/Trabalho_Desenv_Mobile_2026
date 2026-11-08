@@ -12,6 +12,8 @@ data object ListaDeProfessores
 @Serializable
 data object ListaExercicios
 @Serializable
+data object ListaEquipamentos
+@Serializable
 data object PainelUsuario
 
 @Serializable

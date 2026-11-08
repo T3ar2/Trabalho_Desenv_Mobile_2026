@@ -40,6 +40,7 @@ fun HomeScreen(modifier: Modifier = Modifier,
                onExerciciosClick: () -> Unit = {},
                onProfessoresClick: () -> Unit = {},
                onPerfilClick: () -> Unit = {},
+               onEquipamentoClick: () -> Unit = {}
 ) {
 
 
@@ -72,10 +73,11 @@ fun HomeScreen(modifier: Modifier = Modifier,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Cards(
-                    text = "Experiemental",
-                    icon = Icons.Outlined.CalendarMonth,
+                    text = "Equipamentos",
+                    icon = Icons.Outlined.FitnessCenter,
                     backgroundColor = HomeScreenCardBackground2,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    onClick = onEquipamentoClick
                 )
                 Cards(
                     text = "Exercícios",
