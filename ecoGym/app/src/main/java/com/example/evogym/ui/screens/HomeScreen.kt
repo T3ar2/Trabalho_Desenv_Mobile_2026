@@ -39,7 +39,7 @@ import com.example.evogym.ui.theme.HomeScreenCardBackground2
 fun HomeScreen(modifier: Modifier = Modifier,
                onExerciciosClick: () -> Unit = {},
                onProfessoresClick: () -> Unit = {},
-               onPerfilClick: () -> Unit = {}
+               onPerfilClick: () -> Unit = {},
 ) {
 
 
