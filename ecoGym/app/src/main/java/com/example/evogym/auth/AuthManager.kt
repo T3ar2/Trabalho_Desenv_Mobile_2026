@@ -2,7 +2,9 @@ package com.example.evogym.auth
 
 import android.content.Context
 import com.example.evogym.data.local.DatabaseHelper
+import com.example.evogym.data.local.FotoPerfilStorage
 import com.example.evogym.data.model.UsuarioData
+import java.io.File
 
 object AuthManager {
     var usuarioLogado: UsuarioData? = null
