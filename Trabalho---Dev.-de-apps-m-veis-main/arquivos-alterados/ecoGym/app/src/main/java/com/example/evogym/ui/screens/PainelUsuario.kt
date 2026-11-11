@@ -170,7 +170,6 @@ fun PainelUsuarioScreen(
                     tamanho = 96.dp,
                     onClick = { exibirOpcoesFoto = true }
                 )
-                // Ícone de câmera indicando que o avatar é editável
                 Surface(
                     shape = CircleShape,
                     color = AzulEscuro,
@@ -197,16 +196,15 @@ fun PainelUsuarioScreen(
 
             Spacer(Modifier.height(24.dp))
 
-            InfoRow("Nome", nomeAtual)
-            InfoRow("Idade", "$idadeAtual anos")
-            InfoRow("Altura", alturaAtual)
-            InfoRow("Plano", planoAtual)
-            InfoRow("Peso", pesoAtual)
-            InfoRow("Professor Vinculado", professorAtual)
+            Row("Nome", nomeAtual)
+            Row("Idade", "$idadeAtual anos")
+            Row("Altura", alturaAtual)
+            Row("Plano", planoAtual)
+            Row("Peso", pesoAtual)
+            Row("Professor Vinculado", professorAtual)
 
             Spacer(Modifier.height(32.dp))
 
-            // crud buttons
             Button(
                 onClick = { exibirDialogoEditar = true },
                 colors = ButtonDefaults.buttonColors(containerColor = AzulTiffany),

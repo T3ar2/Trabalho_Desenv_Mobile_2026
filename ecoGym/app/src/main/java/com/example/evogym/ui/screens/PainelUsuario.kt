@@ -1,6 +1,9 @@
 package com.example.evogym.ui.screens
 
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,10 +17,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.PhotoCamera
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -31,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,6 +49,11 @@ import com.example.evogym.ui.theme.AzulEscuro
 import com.example.evogym.ui.theme.AzulTiffany
 import com.example.evogym.ui.theme.BrancoBackground
 import com.example.evogym.auth.AuthManager
+import com.example.evogym.data.local.FotoPerfilStorage
+import com.example.evogym.ui.components.AvatarUsuario
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 data class Usuario(
     val nome: String,
@@ -99,7 +110,7 @@ fun PainelUsuarioScreen(
     val seletorFoto = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
     ) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult 
+        if (uri == null) return@rememberLauncherForActivityResult
         scope.launch {
             val arquivo = withContext(Dispatchers.IO) {
                 FotoPerfilStorage.salvar(context, usuarioId, uri)
@@ -112,7 +123,6 @@ fun PainelUsuarioScreen(
             }
         }
     }
-
 
     Column(
         modifier = modifier
@@ -156,24 +166,25 @@ fun PainelUsuarioScreen(
                 shape = RoundedCornerShape(50),
                 color = AzulTiffany
             ) {
-                 Box(contentAlignment = Alignment.BottomEnd) {
-                AvatarUsuario(
-                    nome = nomeAtual,
-                    foto = fotoPerfil,
-                    tamanho = 96.dp,
-                    onClick = { exibirOpcoesFoto = true }
-                )
-                Surface(
-                    shape = CircleShape,
-                    color = AzulEscuro,
-                    modifier = Modifier.size(28.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.PhotoCamera,
-                        contentDescription = "Alterar foto",
-                        tint = Color.White,
-                        modifier = Modifier.padding(5.dp)
+                Box(contentAlignment = Alignment.BottomEnd) {
+                    AvatarUsuario(
+                        nome = nomeAtual,
+                        foto = fotoPerfil,
+                        tamanho = 96.dp,
+                        onClick = { exibirOpcoesFoto = true }
                     )
+                    Surface(
+                        shape = CircleShape,
+                        color = AzulEscuro,
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.PhotoCamera,
+                            contentDescription = "Alterar foto",
+                            tint = Color.White,
+                            modifier = Modifier.padding(5.dp)
+                        )
+                    }
                 }
             }
 

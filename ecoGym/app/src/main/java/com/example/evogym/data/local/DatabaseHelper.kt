@@ -26,6 +26,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         const val COL_TREINOS = "treinos"
         const val COL_SEGUIDORES = "seguidores"
         const val COL_DIAS_SEGUIDOS = "dias_seguidos"
+        const val COL_FOTO = "foto"
 
         const val TABLE_EXERCICIOS = "exercicios"
         const val COL_EXERCICIO_ID = "id"
@@ -47,7 +48,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 $COL_PROFESSOR TEXT DEFAULT 'Joan Mendes',
                 $COL_TREINOS INTEGER DEFAULT 0,
                 $COL_SEGUIDORES INTEGER DEFAULT 0,
-                $COL_DIAS_SEGUIDOS INTEGER DEFAULT 0
+                $COL_DIAS_SEGUIDOS INTEGER DEFAULT 0,
+                $COL_FOTO TEXT
             )
         """.trimIndent()
         db.execSQL(createTable)
