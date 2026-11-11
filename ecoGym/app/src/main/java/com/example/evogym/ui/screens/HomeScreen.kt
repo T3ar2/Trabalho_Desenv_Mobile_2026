@@ -47,6 +47,28 @@ fun HomeScreen(modifier: Modifier = Modifier,
         modifier = modifier.fillMaxSize().background(HomeScreenBackground).padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
+        AuthManager.usuarioLogado?.let { usuario ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AvatarUsuario(
+                    nome = usuario.nome,
+                    foto = usuario.foto,
+                    tamanho = 48.dp,
+                    onClick = onPerfilClick
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "Olá, ${usuario.nome.substringBefore(" ")}!",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+
         Spacer(modifier = Modifier.weight(1f))
 
         EvoGymLogo()

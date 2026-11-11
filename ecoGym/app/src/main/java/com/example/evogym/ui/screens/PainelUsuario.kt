@@ -91,6 +91,29 @@ fun PainelUsuarioScreen(
     var exibirDialogoEditar by remember { mutableStateOf(false) }
     var exibirDialogoExcluir by remember { mutableStateOf(false) }
 
+    val usuarioId = usuarioSessao?.id ?: 0L
+    val scope = rememberCoroutineScope()
+    var fotoPerfil by remember(usuarioId) { mutableStateOf(usuarioSessao?.foto) }
+    var exibirOpcoesFoto by remember { mutableStateOf(false) }
+
+    val seletorFoto = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult 
+        scope.launch {
+            val arquivo = withContext(Dispatchers.IO) {
+                FotoPerfilStorage.salvar(context, usuarioId, uri)
+            }
+            if (arquivo != null && AuthManager.atualizarFoto(context, arquivo)) {
+                fotoPerfil = arquivo.path
+                Toast.makeText(context, "Foto atualizada!", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "Não foi possível salvar a foto", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -133,12 +156,23 @@ fun PainelUsuarioScreen(
                 shape = RoundedCornerShape(50),
                 color = AzulTiffany
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = nomeAtual.take(1).ifEmpty { "U" },
-                        color = Color.White,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold
+                 Box(contentAlignment = Alignment.BottomEnd) {
+                AvatarUsuario(
+                    nome = nomeAtual,
+                    foto = fotoPerfil,
+                    tamanho = 96.dp,
+                    onClick = { exibirOpcoesFoto = true }
+                )
+                Surface(
+                    shape = CircleShape,
+                    color = AzulEscuro,
+                    modifier = Modifier.size(28.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.PhotoCamera,
+                        contentDescription = "Alterar foto",
+                        tint = Color.White,
+                        modifier = Modifier.padding(5.dp)
                     )
                 }
             }
@@ -164,7 +198,6 @@ fun PainelUsuarioScreen(
 
             Spacer(Modifier.height(32.dp))
 
-            // crud buttons
             Button(
                 onClick = { exibirDialogoEditar = true },
                 colors = ButtonDefaults.buttonColors(containerColor = AzulTiffany),
@@ -197,6 +230,44 @@ fun PainelUsuarioScreen(
                 Text("Sair da Conta", color = Color.Gray)
             }
         }
+    }
+
+    if (exibirOpcoesFoto) {
+        AlertDialog(
+            onDismissRequest = { exibirOpcoesFoto = false },
+            title = { Text("Foto de perfil") },
+            text = {
+                Column {
+                    TextButton(
+                        onClick = {
+                            exibirOpcoesFoto = false
+                            seletorFoto.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                            )
+                        }
+                    ) {
+                        Text("Escolher da galeria", color = AzulEscuro)
+                    }
+                    if (fotoPerfil != null) {
+                        TextButton(
+                            onClick = {
+                                exibirOpcoesFoto = false
+                                if (AuthManager.atualizarFoto(context, null)) {
+                                    fotoPerfil = null
+                                    Toast.makeText(context, "Foto removida", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        ) {
+                            Text("Remover foto", color = Color(0xFFD32F2F))
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { exibirOpcoesFoto = false }) { Text("Cancelar") }
+            }
+        )
     }
 
     if (exibirDialogoEditar) {

@@ -11,8 +11,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
 
     companion object {
         private const val DATABASE_NAME = "ecogym.db"
-        // A versão 3 força a criação da tabela em instalações que já tinham o banco na versão 2.
-        private const val DATABASE_VERSION = 3
+        private const val DATABASE_VERSION = 4
 
         const val TABLE_USUARIOS = "usuarios"
         const val COL_ID = "id"
@@ -57,11 +56,12 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // Não apagamos os usuários durante uma atualização de banco.
-        // IF NOT EXISTS permite executar a migração mesmo se a tabela já existir.
-        if (oldVersion < 3) {
+          if (oldVersion < 3) {
             criarTabelaExercicios(db)
             inserirExerciciosIniciais(db)
+        }
+        if (oldVersion < 4) {
+            db.execSQL("ALTER TABLE $TABLE_USUARIOS ADD COLUMN $COL_FOTO TEXT")
         }
     }
 
@@ -142,6 +142,11 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             put(COL_PROFESSOR, novoProfessor)
         }
         return db.update(TABLE_USUARIOS, values, "$COL_EMAIL = ?", arrayOf(emailOriginal))
+    }
+
+     fun atualizarFoto(email: String, caminho: String?): Int {
+        val values = ContentValues().apply { put(COL_FOTO, caminho) }
+        return writableDatabase.update(TABLE_USUARIOS, values, "$COL_EMAIL = ?", arrayOf(email))
     }
 
     fun excluirUsuario(email: String): Int {

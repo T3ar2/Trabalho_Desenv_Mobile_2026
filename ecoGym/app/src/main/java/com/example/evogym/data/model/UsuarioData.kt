@@ -12,5 +12,6 @@ data class UsuarioData(
     val professor: String = "Joan Mendes",
     val treinos: Int = 0,
     val seguidores: Int = 0,
-    val diasSeguidos: Int = 0
+    val diasSeguidos: Int = 0,
+    val foto: String? = null 
 )
