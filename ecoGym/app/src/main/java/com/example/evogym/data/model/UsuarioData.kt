@@ -13,5 +13,7 @@ data class UsuarioData(
     val treinos: Int = 0,
     val seguidores: Int = 0,
     val diasSeguidos: Int = 0,
+    val cep : String = "",
+    val endereco : String = ""
     val foto: String? = null 
 )

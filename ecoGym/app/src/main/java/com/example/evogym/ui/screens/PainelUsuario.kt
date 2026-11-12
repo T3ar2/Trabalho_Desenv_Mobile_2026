@@ -206,6 +206,8 @@ fun PainelUsuarioScreen(
             InfoRow("Plano", planoAtual)
             InfoRow("Peso", pesoAtual)
             InfoRow("Professor Vinculado", professorAtual)
+            InfoRow("CEP", AuthManager.usuarioLogado?.cep?.ifBlank { "Não informado" } ?: "Não informado")
+            InfoRow("Endereço", AuthManager.usuarioLogado?.endereco?.ifBlank { "Não informado" } ?: "Não informado")
 
             Spacer(Modifier.height(32.dp))
 

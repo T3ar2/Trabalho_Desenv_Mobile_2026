@@ -2,8 +2,10 @@ package com.example.evogym.data.local
 
 import android.content.ContentValues
 import android.content.Context
+import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import com.example.evogym.data.model.Equipamento
 import com.example.evogym.data.model.Exercicio
 import com.example.evogym.data.model.UsuarioData
 
@@ -26,12 +28,21 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         const val COL_TREINOS = "treinos"
         const val COL_SEGUIDORES = "seguidores"
         const val COL_DIAS_SEGUIDOS = "dias_seguidos"
+        const val COL_CEP = "cep"
+        const val COL_ENDERECO = "endereco"
         const val COL_FOTO = "foto"
 
         const val TABLE_EXERCICIOS = "exercicios"
         const val COL_EXERCICIO_ID = "id"
         const val COL_EXERCICIO_NOME = "nome"
         const val COL_EXERCICIO_CATEGORIA = "categoria"
+
+        const val TABLE_EQUIPAMENTOS = "equipamentos"
+        const val COL_EQUIP_ID = "id"
+        const val COL_EQUIP_NOME = "nome"
+        const val COL_EQUIP_CATEGORIA = "categoria"
+        const val COL_EQUIP_QUANTIDADE = "quantidade"
+        const val COL_EQUIP_STATUS = "status"
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -41,33 +52,41 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 $COL_NOME TEXT NOT NULL,
                 $COL_EMAIL TEXT UNIQUE NOT NULL,
                 $COL_SENHA TEXT NOT NULL,
-                $COL_IDADE INTEGER DEFAULT 25,
-                $COL_ALTURA TEXT DEFAULT '1.70 m',
+                $COL_IDADE INTEGER DEFAULT 0,
+                $COL_ALTURA TEXT DEFAULT '1.70 m', 
                 $COL_PESO TEXT DEFAULT '70 kg',
                 $COL_PLANO TEXT DEFAULT 'Mensal',
                 $COL_PROFESSOR TEXT DEFAULT 'Joan Mendes',
                 $COL_TREINOS INTEGER DEFAULT 0,
                 $COL_SEGUIDORES INTEGER DEFAULT 0,
                 $COL_DIAS_SEGUIDOS INTEGER DEFAULT 0,
+                $COL_CEP TEXT DEFAULT '',
+                $COL_ENDERECO TEXT DEFAULT ''
                 $COL_FOTO TEXT
             )
         """.trimIndent()
         db.execSQL(createTable)
         criarTabelaExercicios(db)
         inserirExerciciosIniciais(db)
+        criarTabelaEquipamentos(db)
+        inserirEquipamentosIniciais(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-          if (oldVersion < 3) {
+        if (oldVersion < 3) {
             criarTabelaExercicios(db)
             inserirExerciciosIniciais(db)
         }
         if (oldVersion < 4) {
+            db.execSQL("ALTER TABLE $TABLE_USUARIOS ADD COLUMN $COL_CEP TEXT DEFAULT ''")
+            db.execSQL("ALTER TABLE $TABLE_USUARIOS ADD COLUMN $COL_ENDERECO TEXT DEFAULT ''")
+            criarTabelaEquipamentos(db)
+            inserirEquipamentosIniciais(db)
             db.execSQL("ALTER TABLE $TABLE_USUARIOS ADD COLUMN $COL_FOTO TEXT")
         }
     }
 
-    fun inserirUsuario(nome: String, email: String, senha: String): Long {
+    fun inserirUsuario(nome: String, email: String, senha: String, cep: String, endereco: String): Long {
         val db = writableDatabase
         val values = ContentValues().apply {
             put(COL_NOME, nome)
@@ -81,6 +100,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             put(COL_TREINOS, 1)
             put(COL_SEGUIDORES, 0)
             put(COL_DIAS_SEGUIDOS, 1)
+            put(COL_CEP, cep)
+            put(COL_ENDERECO, endereco)
         }
         return db.insert(TABLE_USUARIOS, null, values)
     }
@@ -202,6 +223,40 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         arrayOf(id.toString())
     )
 
+
+    fun inserirEquipamento(nome: String, categoria: String, quantidade: Int, status: String): Long {
+        val values = ContentValues().apply {
+            put(COL_EQUIP_NOME, nome)
+            put(COL_EQUIP_CATEGORIA, categoria)
+            put(COL_EQUIP_QUANTIDADE, quantidade)
+            put(COL_EQUIP_STATUS, status)
+        }
+        return writableDatabase.insert(TABLE_EQUIPAMENTOS, null, values)
+    }
+
+    fun listarEquipamentos(): List<Equipamento> {
+        val lista = mutableListOf<Equipamento>()
+        val cursor = readableDatabase.query(
+            TABLE_EQUIPAMENTOS, null, null, null, null, null, "$COL_EQUIP_NOME ASC"
+        )
+        cursor.use { while (it.moveToNext()) lista.add(extrairEquipamento(it)) }
+        return lista
+    }
+    fun atualizarEquipamento(equipamento :  Equipamento): Int {
+        val values = ContentValues().apply{
+            put(COL_EQUIP_NOME, equipamento.nome)
+            put(COL_EQUIP_CATEGORIA, equipamento.categoria)
+            put(COL_EQUIP_QUANTIDADE, equipamento.quantidade)
+            put(COL_EQUIP_STATUS, equipamento.status)
+        }
+        return writableDatabase.update(
+            TABLE_EQUIPAMENTOS, values, "$COL_EQUIP_ID = ?", arrayOf(equipamento.id.toString())
+        )
+    }
+
+    fun excluirEquipamento(id: Long): Int =
+        writableDatabase.delete(TABLE_EQUIPAMENTOS, "$COL_EQUIP_ID = ?", arrayOf(id.toString()))
+
     private fun criarTabelaExercicios(db: SQLiteDatabase) {
         db.execSQL(
             """
@@ -209,6 +264,20 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 $COL_EXERCICIO_ID INTEGER PRIMARY KEY AUTOINCREMENT,
                 $COL_EXERCICIO_NOME TEXT NOT NULL,
                 $COL_EXERCICIO_CATEGORIA TEXT NOT NULL
+            )
+            """.trimIndent()
+        )
+    }
+
+    private fun criarTabelaEquipamentos(db: SQLiteDatabase){
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS $TABLE_EQUIPAMENTOS (
+                $COL_EQUIP_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COL_EQUIP_NOME TEXT NOT NULL,
+                $COL_EQUIP_CATEGORIA TEXT NOT NULL,
+                $COL_EQUIP_QUANTIDADE INTEGER NOT NULL DEFAULT 1,
+                $COL_EQUIP_STATUS TEXT NOT NULL DEFAULT 'Disponível'
             )
             """.trimIndent()
         )
@@ -235,6 +304,28 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         }
     }
 
+    private fun inserirEquipamentosIniciais(db: SQLiteDatabase) {
+        val total = db.rawQuery("SELECT COUNT(*) FROM $TABLE_EQUIPAMENTOS", null).use {
+            it.moveToFirst(); it.getInt(0)
+        }
+        if (total > 0) return
+ 
+        listOf(
+            arrayOf("Esteira", "Cardio", 5, "Disponível"),
+            arrayOf("Bicicleta Ergométrica", "Cardio", 4, "Disponível"),
+            arrayOf("Leg Press", "Musculação", 2, "Manutenção"),
+            arrayOf("Halteres", "Musculação", 20, "Disponível")
+        ).forEach { (nome, categoria, qtd, status) ->
+            val values = ContentValues().apply {
+                put(COL_EQUIP_NOME, nome as String)
+                put(COL_EQUIP_CATEGORIA, categoria as String)
+                put(COL_EQUIP_QUANTIDADE, qtd as Int)
+                put(COL_EQUIP_STATUS, status as String)
+            }
+            db.insert(TABLE_EQUIPAMENTOS, null, values)
+        }
+    }
+
     private fun extrairUsuario(cursor: android.database.Cursor): UsuarioData {
         return UsuarioData(
             id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_ID)),
@@ -248,7 +339,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             professor = cursor.getString(cursor.getColumnIndexOrThrow(COL_PROFESSOR)),
             treinos = cursor.getInt(cursor.getColumnIndexOrThrow(COL_TREINOS)),
             seguidores = cursor.getInt(cursor.getColumnIndexOrThrow(COL_SEGUIDORES)),
-            diasSeguidos = cursor.getInt(cursor.getColumnIndexOrThrow(COL_DIAS_SEGUIDOS))
+            diasSeguidos = cursor.getInt(cursor.getColumnIndexOrThrow(COL_DIAS_SEGUIDOS)),
+            cep = cursor.getString(cursor.getColumnIndexOrThrow(COL_CEP)) ?: "",
+            endereco = cursor.getString(cursor.getColumnIndexOrThrow(COL_ENDERECO)) ?: "",
         )
     }
 
@@ -256,5 +349,13 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_EXERCICIO_ID)),
         nome = cursor.getString(cursor.getColumnIndexOrThrow(COL_EXERCICIO_NOME)),
         categoria = cursor.getString(cursor.getColumnIndexOrThrow(COL_EXERCICIO_CATEGORIA))
+    )
+    
+    private fun extrairEquipamento(cursor: Cursor): Equipamento = Equipamento(
+        id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_EQUIP_ID)),
+        nome = cursor.getString(cursor.getColumnIndexOrThrow(COL_EQUIP_NOME)),
+        categoria = cursor.getString(cursor.getColumnIndexOrThrow(COL_EQUIP_CATEGORIA)),
+        quantidade = cursor.getInt(cursor.getColumnIndexOrThrow(COL_EQUIP_QUANTIDADE)),
+        status = cursor.getString(cursor.getColumnIndexOrThrow(COL_EQUIP_STATUS))
     )
 }
