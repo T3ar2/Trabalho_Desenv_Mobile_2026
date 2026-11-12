@@ -2,7 +2,9 @@ package com.example.evogym.auth
 
 import android.content.Context
 import com.example.evogym.data.local.DatabaseHelper
+import com.example.evogym.data.local.FotoPerfilStorage
 import com.example.evogym.data.model.UsuarioData
+import java.io.File
 
 object AuthManager {
     var usuarioLogado: UsuarioData? = null
@@ -47,6 +49,18 @@ object AuthManager {
         )
         if (linhas > 0) {
             usuarioLogado = db.buscarPorEmail(email)
+            return true
+        }
+        return false
+    }
+
+    fun atualizarFoto(context: Context, novaFoto: File?): Boolean {
+        val usuario = usuarioLogado ?: return false
+        val db = DatabaseHelper(context)
+        val linhas = db.atualizarFoto(usuario.email, novaFoto?.path)
+        if (linhas > 0) {
+            usuarioLogado = db.buscarPorEmail(usuario.email)
+            FotoPerfilStorage.remover(context, usuario.id, manter = novaFoto)
             return true
         }
         return false

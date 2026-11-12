@@ -30,6 +30,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         const val COL_DIAS_SEGUIDOS = "dias_seguidos"
         const val COL_CEP = "cep"
         const val COL_ENDERECO = "endereco"
+        const val COL_FOTO = "foto"
 
         const val TABLE_EXERCICIOS = "exercicios"
         const val COL_EXERCICIO_ID = "id"
@@ -61,6 +62,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 $COL_DIAS_SEGUIDOS INTEGER DEFAULT 0,
                 $COL_CEP TEXT DEFAULT '',
                 $COL_ENDERECO TEXT DEFAULT ''
+                $COL_FOTO TEXT
             )
         """.trimIndent()
         db.execSQL(createTable)
@@ -80,6 +82,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             db.execSQL("ALTER TABLE $TABLE_USUARIOS ADD COLUMN $COL_ENDERECO TEXT DEFAULT ''")
             criarTabelaEquipamentos(db)
             inserirEquipamentosIniciais(db)
+            db.execSQL("ALTER TABLE $TABLE_USUARIOS ADD COLUMN $COL_FOTO TEXT")
         }
     }
 
@@ -162,6 +165,11 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             put(COL_PROFESSOR, novoProfessor)
         }
         return db.update(TABLE_USUARIOS, values, "$COL_EMAIL = ?", arrayOf(emailOriginal))
+    }
+
+     fun atualizarFoto(email: String, caminho: String?): Int {
+        val values = ContentValues().apply { put(COL_FOTO, caminho) }
+        return writableDatabase.update(TABLE_USUARIOS, values, "$COL_EMAIL = ?", arrayOf(email))
     }
 
     fun excluirUsuario(email: String): Int {

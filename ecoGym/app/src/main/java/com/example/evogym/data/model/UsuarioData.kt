@@ -15,4 +15,5 @@ data class UsuarioData(
     val diasSeguidos: Int = 0,
     val cep : String = "",
     val endereco : String = ""
+    val foto: String? = null 
 )

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
@@ -31,6 +32,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.evogym.auth.AuthManager
+import com.example.evogym.ui.components.AvatarUsuario
 import com.example.evogym.ui.theme.HomeScreenBackground
 import com.example.evogym.ui.theme.HomeScreenCardBackground1
 import com.example.evogym.ui.theme.HomeScreenCardBackground2
@@ -48,6 +51,28 @@ fun HomeScreen(modifier: Modifier = Modifier,
         modifier = modifier.fillMaxSize().background(HomeScreenBackground).padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
+        AuthManager.usuarioLogado?.let { usuario ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AvatarUsuario(
+                    nome = usuario.nome,
+                    foto = usuario.foto,
+                    tamanho = 48.dp,
+                    onClick = onPerfilClick
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "Olá, ${usuario.nome.substringBefore(" ")}!",
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+
         Spacer(modifier = Modifier.weight(1f))
 
         EvoGymLogo()
