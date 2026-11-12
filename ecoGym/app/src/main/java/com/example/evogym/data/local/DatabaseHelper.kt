@@ -8,12 +8,14 @@ import android.database.sqlite.SQLiteOpenHelper
 import com.example.evogym.data.model.Equipamento
 import com.example.evogym.data.model.Exercicio
 import com.example.evogym.data.model.UsuarioData
+import com.example.evogym.data.model.Professor
 
-class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+class DatabaseHelper(context: Context) :
+    SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     companion object {
         private const val DATABASE_NAME = "ecogym.db"
-        private const val DATABASE_VERSION = 4
+        private const val DATABASE_VERSION = 5
 
         const val TABLE_USUARIOS = "usuarios"
         const val COL_ID = "id"
@@ -43,6 +45,12 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         const val COL_EQUIP_CATEGORIA = "categoria"
         const val COL_EQUIP_QUANTIDADE = "quantidade"
         const val COL_EQUIP_STATUS = "status"
+
+        const val TABLE_PROFESSORES = "professores"
+        const val COL_PROF_ID = "id"
+        const val COL_PROF_NOME = "nome"
+        const val COL_PROF_ESPECIALIDADE = "especialidade"
+        const val COL_PROF_FOTO = "foto"
     }
 
     override fun onCreate(db: SQLiteDatabase) {
@@ -61,7 +69,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 $COL_SEGUIDORES INTEGER DEFAULT 0,
                 $COL_DIAS_SEGUIDOS INTEGER DEFAULT 0,
                 $COL_CEP TEXT DEFAULT '',
-                $COL_ENDERECO TEXT DEFAULT ''
+                $COL_ENDERECO TEXT DEFAULT '',
                 $COL_FOTO TEXT
             )
         """.trimIndent()
@@ -70,6 +78,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         inserirExerciciosIniciais(db)
         criarTabelaEquipamentos(db)
         inserirEquipamentosIniciais(db)
+        criarTabelaProfessores(db)
+        inserirProfessoresIniciais(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -84,9 +94,19 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             inserirEquipamentosIniciais(db)
             db.execSQL("ALTER TABLE $TABLE_USUARIOS ADD COLUMN $COL_FOTO TEXT")
         }
+        if (oldVersion < 5) {
+            criarTabelaProfessores(db)
+            inserirProfessoresIniciais(db)
+        }
     }
 
-    fun inserirUsuario(nome: String, email: String, senha: String, cep: String, endereco: String): Long {
+    fun inserirUsuario(
+        nome: String,
+        email: String,
+        senha: String,
+        cep: String,
+        endereco: String
+    ): Long {
         val db = writableDatabase
         val values = ContentValues().apply {
             put(COL_NOME, nome)
@@ -167,7 +187,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         return db.update(TABLE_USUARIOS, values, "$COL_EMAIL = ?", arrayOf(emailOriginal))
     }
 
-     fun atualizarFoto(email: String, caminho: String?): Int {
+    fun atualizarFoto(email: String, caminho: String?): Int {
         val values = ContentValues().apply { put(COL_FOTO, caminho) }
         return writableDatabase.update(TABLE_USUARIOS, values, "$COL_EMAIL = ?", arrayOf(email))
     }
@@ -242,8 +262,9 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         cursor.use { while (it.moveToNext()) lista.add(extrairEquipamento(it)) }
         return lista
     }
-    fun atualizarEquipamento(equipamento :  Equipamento): Int {
-        val values = ContentValues().apply{
+
+    fun atualizarEquipamento(equipamento: Equipamento): Int {
+        val values = ContentValues().apply {
             put(COL_EQUIP_NOME, equipamento.nome)
             put(COL_EQUIP_CATEGORIA, equipamento.categoria)
             put(COL_EQUIP_QUANTIDADE, equipamento.quantidade)
@@ -257,6 +278,54 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
     fun excluirEquipamento(id: Long): Int =
         writableDatabase.delete(TABLE_EQUIPAMENTOS, "$COL_EQUIP_ID = ?", arrayOf(id.toString()))
 
+    fun inserirProfessor(nome: String, especialidade: String, foto: String = ""): Long {
+        val values = ContentValues().apply {
+            put(COL_PROF_NOME, nome)
+            put(COL_PROF_ESPECIALIDADE, especialidade)
+            put(COL_PROF_FOTO, foto)
+        }
+        return writableDatabase.insert(TABLE_PROFESSORES, null, values)
+    }
+
+    fun listarProfessores(): List<Professor> {
+        val professores = mutableListOf<Professor>()
+        val cursor = readableDatabase.query(
+            TABLE_PROFESSORES,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "$COL_PROF_NOME ASC"
+        )
+        cursor.use {
+            while (it.moveToNext()) {
+                professores.add(extrairProfessor(it))
+            }
+        }
+        return professores
+    }
+
+    fun atualizarProfessor(professor: Professor): Int {
+        val values = ContentValues().apply {
+            put(COL_PROF_NOME, professor.nome)
+            put(COL_PROF_ESPECIALIDADE, professor.especialidade)
+            put(COL_PROF_FOTO, professor.foto)
+        }
+        return writableDatabase.update(
+            TABLE_PROFESSORES,
+            values,
+            "$COL_PROF_ID = ?",
+            arrayOf(professor.id.toString())
+        )
+    }
+
+    fun excluirProfessor(id: Long): Int = writableDatabase.delete(
+        TABLE_PROFESSORES,
+        "$COL_PROF_ID = ?",
+        arrayOf(id.toString())
+    )
+
     private fun criarTabelaExercicios(db: SQLiteDatabase) {
         db.execSQL(
             """
@@ -269,7 +338,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         )
     }
 
-    private fun criarTabelaEquipamentos(db: SQLiteDatabase){
+    private fun criarTabelaEquipamentos(db: SQLiteDatabase) {
         db.execSQL(
             """
             CREATE TABLE IF NOT EXISTS $TABLE_EQUIPAMENTOS (
@@ -278,6 +347,19 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 $COL_EQUIP_CATEGORIA TEXT NOT NULL,
                 $COL_EQUIP_QUANTIDADE INTEGER NOT NULL DEFAULT 1,
                 $COL_EQUIP_STATUS TEXT NOT NULL DEFAULT 'Disponível'
+            )
+            """.trimIndent()
+        )
+    }
+
+    private fun criarTabelaProfessores(db: SQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS $TABLE_PROFESSORES (
+                $COL_PROF_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COL_PROF_NOME TEXT NOT NULL,
+                $COL_PROF_ESPECIALIDADE TEXT NOT NULL,
+                $COL_PROF_FOTO TEXT DEFAULT ''
             )
             """.trimIndent()
         )
@@ -309,7 +391,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             it.moveToFirst(); it.getInt(0)
         }
         if (total > 0) return
- 
+
         listOf(
             arrayOf("Esteira", "Cardio", 5, "Disponível"),
             arrayOf("Bicicleta Ergométrica", "Cardio", 4, "Disponível"),
@@ -323,6 +405,27 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 put(COL_EQUIP_STATUS, status as String)
             }
             db.insert(TABLE_EQUIPAMENTOS, null, values)
+        }
+    }
+
+    private fun inserirProfessoresIniciais(db: SQLiteDatabase) {
+        val total = db.rawQuery("SELECT COUNT(*) FROM $TABLE_PROFESSORES", null).use {
+            it.moveToFirst(); it.getInt(0)
+        }
+        if (total > 0) return
+
+        listOf(
+            Triple("Joan Mendes", "Crossfit e Força", "joan_mendes"),
+            Triple("Ana Costa", "Ginástica & Mobilidade", "ana_costa"),
+            Triple("Pedro Lima", "Cardio e Ritmo", "pedro_lima"),
+            Triple("Joana Mendes", "Flexibilidade e Prevenção", "joan_mendes2")
+        ).forEach { (nome, especialidade, foto) ->
+            val values = ContentValues().apply {
+                put(COL_PROF_NOME, nome)
+                put(COL_PROF_ESPECIALIDADE, especialidade)
+                put(COL_PROF_FOTO, foto)
+            }
+            db.insert(TABLE_PROFESSORES, null, values)
         }
     }
 
@@ -350,7 +453,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         nome = cursor.getString(cursor.getColumnIndexOrThrow(COL_EXERCICIO_NOME)),
         categoria = cursor.getString(cursor.getColumnIndexOrThrow(COL_EXERCICIO_CATEGORIA))
     )
-    
+
     private fun extrairEquipamento(cursor: Cursor): Equipamento = Equipamento(
         id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_EQUIP_ID)),
         nome = cursor.getString(cursor.getColumnIndexOrThrow(COL_EQUIP_NOME)),
@@ -358,4 +461,13 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         quantidade = cursor.getInt(cursor.getColumnIndexOrThrow(COL_EQUIP_QUANTIDADE)),
         status = cursor.getString(cursor.getColumnIndexOrThrow(COL_EQUIP_STATUS))
     )
+
+    private fun extrairProfessor(cursor: Cursor): Professor {
+        return Professor(
+            id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_PROF_ID)),
+            nome = cursor.getString(cursor.getColumnIndexOrThrow(COL_PROF_NOME)),
+            especialidade = cursor.getString(cursor.getColumnIndexOrThrow(COL_PROF_ESPECIALIDADE)),
+            foto = cursor.getString(cursor.getColumnIndexOrThrow(COL_PROF_FOTO))
+        )
+    }
 }

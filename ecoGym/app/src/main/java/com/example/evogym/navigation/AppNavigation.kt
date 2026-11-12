@@ -16,6 +16,7 @@ import com.example.evogym.ui.screens.PainelUsuarioScreen
 import com.example.evogym.ui.screens.usuarioExemplo
 import com.example.evogym.ui.viewmodel.EquipamentosViewModel
 import com.example.evogym.ui.viewmodel.ExerciciosViewModel
+import com.example.evogym.ui.viewmodel.ProfessoresViewModel
 
 @Composable
 fun AppNavigation(navController: NavHostController, modifier: Modifier = Modifier) {
@@ -52,7 +53,8 @@ fun AppNavigation(navController: NavHostController, modifier: Modifier = Modifie
         composable<ListaDeProfessores> {
             ListaDeProfessores(
                 modifier = Modifier,
-                onVoltarClick = { navController.popBackStack() }
+                onVoltarClick = { navController.popBackStack() },
+                viewModel = viewModel<ProfessoresViewModel>()
             )
         }
 
