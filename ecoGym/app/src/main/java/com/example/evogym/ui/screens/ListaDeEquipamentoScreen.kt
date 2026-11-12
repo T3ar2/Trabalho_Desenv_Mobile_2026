@@ -1,7 +1,6 @@
 package com.example.evogym.ui.screens
 
 import android.widget.Toast
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -61,7 +60,6 @@ fun ListaEquipamentosScreen(
 ) {
     val context = LocalContext.current
     var textoBusca by remember { mutableStateOf("") }
-    var filtroSelecionado by remember { mutableStateOf<String?>(null) }
     var formularioAberto by remember { mutableStateOf(false) }
     var idEmEdicao by remember { mutableStateOf(0L) }
     var nome by remember { mutableStateOf("") }
@@ -81,8 +79,7 @@ fun ListaEquipamentosScreen(
     }
 
     val listaFiltrada = viewModel.equipamentos.filter { equipamento ->
-        equipamento.nome.contains(textoBusca, ignoreCase = true) &&
-            (filtroSelecionado == null || equipamento.categoria == filtroSelecionado)
+        equipamento.nome.contains(textoBusca, ignoreCase = true)
     }
 
     fun abrirFormulario(equipamento: Equipamento? = null) {
@@ -96,10 +93,6 @@ fun ListaEquipamentosScreen(
 
     Column(modifier = modifier.fillMaxWidth().background(BrancoBackground)) {
         CabecalhoEquipamentos(
-            filtroSelecionado = filtroSelecionado,
-            onFiltroClick = { filtro ->
-                filtroSelecionado = if (filtroSelecionado == filtro) null else filtro
-            },
             onVoltarClick = onVoltarClick,
             onNovoClick = { abrirFormulario() }
         )
@@ -175,8 +168,6 @@ fun ListaEquipamentosScreen(
 
 @Composable
 private fun CabecalhoEquipamentos(
-    filtroSelecionado: String?,
-    onFiltroClick: (String) -> Unit,
     onVoltarClick: () -> Unit,
     onNovoClick: () -> Unit
 ) {
@@ -195,22 +186,6 @@ private fun CabecalhoEquipamentos(
             )
             IconButton(onClick = onNovoClick) {
                 Icon(Icons.Default.Add, "Cadastrar equipamento", tint = Color.White)
-            }
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            CATEGORIAS.forEach { filtro ->
-                Button(
-                    onClick = { onFiltroClick(filtro) },
-                    shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (filtroSelecionado == filtro) AzulTiffany
-                        else Color.White.copy(alpha = 0.05f)
-                    ),
-                    border = BorderStroke(
-                        1.dp,
-                        if (filtroSelecionado == filtro) Color.Transparent else Color.White.copy(alpha = 0.1f)
-                    )
-                ) { Text(filtro) }
             }
         }
     }

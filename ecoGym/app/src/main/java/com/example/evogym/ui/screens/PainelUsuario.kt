@@ -1,6 +1,5 @@
 package com.example.evogym.ui.screens
 
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -19,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
@@ -33,95 +33,61 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.evogym.ui.theme.AzulEscuro
 import com.example.evogym.ui.theme.AzulTiffany
 import com.example.evogym.ui.theme.BrancoBackground
-import com.example.evogym.auth.AuthManager
-import com.example.evogym.data.local.FotoPerfilStorage
 import com.example.evogym.ui.components.AvatarUsuario
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-
-data class Usuario(
-    val nome: String,
-    val idade: Int,
-    val altura: String,
-    val plano: String,
-    val peso: String,
-    val professor: String,
-    val treinos: Int,
-    val seguidores: Int,
-    val diasSeguidos: Int
-)
-
-fun usuarioExemplo() = Usuario(
-    nome = "Susana K.",
-    idade = 27,
-    altura = "1.65 m",
-    plano = "Mensal",
-    peso = "61 kg",
-    professor = "Joan Mendes",
-    treinos = 12,
-    seguidores = 1,
-    diasSeguidos = 4
-)
+import com.example.evogym.ui.components.SeletorProfessor
+import com.example.evogym.ui.viewmodel.ProfessoresViewModel
+import com.example.evogym.ui.viewmodel.UsuarioViewModel
 
 @Composable
 fun PainelUsuarioScreen(
-    usuario: Usuario = usuarioExemplo(),
+    viewModel: UsuarioViewModel,
     modifier: Modifier = Modifier,
     onVoltarClick: () -> Unit = {},
-    onDeslogarClick: () -> Unit = {}
+    professoresViewModel: ProfessoresViewModel = viewModel()
 ) {
-    val context = LocalContext.current
-    val usuarioSessao = AuthManager.usuarioLogado
-
-    val nomeAtual = usuarioSessao?.nome ?: usuario.nome
-    val idadeAtual = usuarioSessao?.idade ?: usuario.idade
-    val alturaAtual = usuarioSessao?.altura ?: usuario.altura
-    val planoAtual = usuarioSessao?.plano ?: usuario.plano
-    val pesoAtual = usuarioSessao?.peso ?: usuario.peso
-    val professorAtual = usuarioSessao?.professor ?: usuario.professor
-    val treinosAtual = usuarioSessao?.treinos ?: usuario.treinos
-    val seguidoresAtual = usuarioSessao?.seguidores ?: usuario.seguidores
-    val diasSeguidosAtual = usuarioSessao?.diasSeguidos ?: usuario.diasSeguidos
+    val usuario = viewModel.usuario ?: return
+    val professores = professoresViewModel.professores
+    val professorVinculado = professores.firstOrNull { it.id == usuario.professorId }
 
     var exibirDialogoEditar by remember { mutableStateOf(false) }
     var exibirDialogoExcluir by remember { mutableStateOf(false) }
-
-    val usuarioId = usuarioSessao?.id ?: 0L
-    val scope = rememberCoroutineScope()
-    var fotoPerfil by remember(usuarioId) { mutableStateOf(usuarioSessao?.foto) }
     var exibirOpcoesFoto by remember { mutableStateOf(false) }
+
+    LaunchedEffect(professoresViewModel) { professoresViewModel.listar() }
+
+    LaunchedEffect(viewModel.perfilSalvo) {
+        if (viewModel.perfilSalvo) {
+            exibirDialogoEditar = false
+            viewModel.consumirSalvamento()
+        }
+    }
 
     val seletorFoto = rememberLauncherForActivityResult(
         ActivityResultContracts.PickVisualMedia()
     ) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult
-        scope.launch {
-            val arquivo = withContext(Dispatchers.IO) {
-                FotoPerfilStorage.salvar(context, usuarioId, uri)
-            }
-            if (arquivo != null && AuthManager.atualizarFoto(context, arquivo)) {
-                fotoPerfil = arquivo.path
-                Toast.makeText(context, "Foto atualizada!", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(context, "Não foi possível salvar a foto", Toast.LENGTH_SHORT).show()
-            }
-        }
+        if (uri != null) viewModel.atualizarFoto(uri)
+    }
+    val seletorArquivo = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) viewModel.atualizarFoto(uri)
     }
 
     Column(
@@ -168,10 +134,10 @@ fun PainelUsuarioScreen(
             ) {
                 Box(contentAlignment = Alignment.BottomEnd) {
                     AvatarUsuario(
-                        nome = nomeAtual,
-                        foto = fotoPerfil,
+                        nome = usuario.nome,
+                        foto = usuario.foto,
                         tamanho = 96.dp,
-                        onClick = { exibirOpcoesFoto = true }
+                        onClick = { if (!viewModel.carregando) exibirOpcoesFoto = true }
                     )
                     Surface(
                         shape = CircleShape,
@@ -189,30 +155,31 @@ fun PainelUsuarioScreen(
             }
 
             Spacer(Modifier.height(12.dp))
-            Text(nomeAtual, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+            Text(usuario.nome, fontWeight = FontWeight.Bold, fontSize = 20.sp)
             Spacer(Modifier.height(12.dp))
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Badge("$treinosAtual Treinos")
-                Badge("$seguidoresAtual Seguidores")
-                Badge("$diasSeguidosAtual Dias Seguidos")
+                Badge("${usuario.treinos} Treinos")
+                Badge("${usuario.seguidores} Seguidores")
+                Badge("${usuario.diasSeguidos} Dias Seguidos")
             }
 
             Spacer(Modifier.height(24.dp))
 
-            InfoRow("Nome", nomeAtual)
-            InfoRow("Idade", "$idadeAtual anos")
-            InfoRow("Altura", alturaAtual)
-            InfoRow("Plano", planoAtual)
-            InfoRow("Peso", pesoAtual)
-            InfoRow("Professor Vinculado", professorAtual)
-            InfoRow("CEP", AuthManager.usuarioLogado?.cep?.ifBlank { "Não informado" } ?: "Não informado")
-            InfoRow("Endereço", AuthManager.usuarioLogado?.endereco?.ifBlank { "Não informado" } ?: "Não informado")
+            InfoRow("Nome", usuario.nome)
+            InfoRow("Idade", "${usuario.idade} anos")
+            InfoRow("Altura", usuario.altura)
+            InfoRow("Plano", usuario.plano)
+            InfoRow("Peso", usuario.peso)
+            InfoRow("Professor Vinculado", professorVinculado?.nome ?: "Sem professor")
+            InfoRow("CEP", usuario.cep.ifBlank { "Não informado" })
+            InfoRow("Endereço", usuario.endereco.ifBlank { "Não informado" })
 
             Spacer(Modifier.height(32.dp))
 
             Button(
                 onClick = { exibirDialogoEditar = true },
+                enabled = !viewModel.carregando && !professoresViewModel.carregando,
                 colors = ButtonDefaults.buttonColors(containerColor = AzulTiffany),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -224,6 +191,7 @@ fun PainelUsuarioScreen(
 
             OutlinedButton(
                 onClick = { exibirDialogoExcluir = true },
+                enabled = !viewModel.carregando,
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFD32F2F)),
                 modifier = Modifier.fillMaxWidth()
@@ -234,11 +202,8 @@ fun PainelUsuarioScreen(
             Spacer(Modifier.height(8.dp))
 
             TextButton(
-                onClick = {
-                    AuthManager.logout()
-                    Toast.makeText(context, "Sessão encerrada", Toast.LENGTH_SHORT).show()
-                    onDeslogarClick()
-                }
+                onClick = viewModel::sair,
+                enabled = !viewModel.carregando
             ) {
                 Text("Sair da Conta", color = Color.Gray)
             }
@@ -261,14 +226,19 @@ fun PainelUsuarioScreen(
                     ) {
                         Text("Escolher da galeria", color = AzulEscuro)
                     }
-                    if (fotoPerfil != null) {
+                    TextButton(
+                        onClick = {
+                            exibirOpcoesFoto = false
+                            seletorArquivo.launch(arrayOf("image/*"))
+                        }
+                    ) {
+                        Text("Escolher em Arquivos", color = AzulEscuro)
+                    }
+                    if (usuario.foto != null) {
                         TextButton(
                             onClick = {
                                 exibirOpcoesFoto = false
-                                if (AuthManager.atualizarFoto(context, null)) {
-                                    fotoPerfil = null
-                                    Toast.makeText(context, "Foto removida", Toast.LENGTH_SHORT).show()
-                                }
+                                viewModel.atualizarFoto(null)
                             }
                         ) {
                             Text("Remover foto", color = Color(0xFFD32F2F))
@@ -284,12 +254,16 @@ fun PainelUsuarioScreen(
     }
 
     if (exibirDialogoEditar) {
-        var editNome by remember { mutableStateOf(nomeAtual) }
-        var editIdade by remember { mutableStateOf(idadeAtual.toString()) }
-        var editAltura by remember { mutableStateOf(alturaAtual) }
-        var editPeso by remember { mutableStateOf(pesoAtual) }
-        var editPlano by remember { mutableStateOf(planoAtual) }
-        var editProfessor by remember { mutableStateOf(professorAtual) }
+        var editNome by remember { mutableStateOf(usuario.nome) }
+        var editIdade by remember { mutableStateOf(usuario.idade.toString()) }
+        var editAltura by remember { mutableStateOf(usuario.altura.trim().removeSuffix("m").trim()) }
+        var editPeso by remember { mutableStateOf(usuario.peso.trim().removeSuffix("kg").trim()) }
+        var editPlano by remember { mutableStateOf(usuario.plano) }
+        var editProfessorId by remember {
+            mutableStateOf(
+                if (professoresViewModel.mensagem == null) professorVinculado?.id else usuario.professorId
+            )
+        }
 
         AlertDialog(
             onDismissRequest = { exibirDialogoEditar = false },
@@ -309,18 +283,21 @@ fun PainelUsuarioScreen(
                         value = editIdade,
                         onValueChange = { editIdade = it },
                         label = { Text("Idade") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
                         value = editAltura,
                         onValueChange = { editAltura = it },
-                        label = { Text("Altura") },
+                        label = { Text("Altura (m)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
                         value = editPeso,
                         onValueChange = { editPeso = it },
-                        label = { Text("Peso") },
+                        label = { Text("Peso (kg)") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
@@ -329,34 +306,27 @@ fun PainelUsuarioScreen(
                         label = { Text("Plano") },
                         modifier = Modifier.fillMaxWidth()
                     )
-                    OutlinedTextField(
-                        value = editProfessor,
-                        onValueChange = { editProfessor = it },
-                        label = { Text("Professor") },
-                        modifier = Modifier.fillMaxWidth()
+                    SeletorProfessor(
+                        professores = professores,
+                        selecionadoId = editProfessorId,
+                        selecionar = { editProfessorId = it },
+                        habilitado = !viewModel.carregando && professoresViewModel.mensagem == null
                     )
                 }
             },
             confirmButton = {
                 Button(
                     onClick = {
-                        val idadeInt = editIdade.toIntOrNull() ?: idadeAtual
-                        val sucesso = AuthManager.atualizarPerfil(
-                            context = context,
+                        viewModel.salvarPerfil(
                             nome = editNome,
-                            idade = idadeInt,
+                            idade = editIdade,
                             altura = editAltura,
                             peso = editPeso,
                             plano = editPlano,
-                            professor = editProfessor
+                            professorId = editProfessorId
                         )
-                        if (sucesso) {
-                            Toast.makeText(context, "Perfil atualizado.", Toast.LENGTH_SHORT).show()
-                            exibirDialogoEditar = false
-                        } else {
-                            Toast.makeText(context, "Erro ao atualizar perfil", Toast.LENGTH_SHORT).show()
-                        }
                     },
+                    enabled = !viewModel.carregando,
                     colors = ButtonDefaults.buttonColors(containerColor = AzulTiffany)
                 ) {
                     Text("Salvar")
@@ -377,16 +347,8 @@ fun PainelUsuarioScreen(
             text = { Text("Tem certeza que deseja excluir sua conta permanentemente do banco de dados?") },
             confirmButton = {
                 Button(
-                    onClick = {
-                        val sucesso = AuthManager.excluirConta(context)
-                        if (sucesso) {
-                            Toast.makeText(context, "Conta excluída do SQLite com sucesso!", Toast.LENGTH_LONG).show()
-                            exibirDialogoExcluir = false
-                            onDeslogarClick()
-                        } else {
-                            Toast.makeText(context, "Erro ao excluir conta", Toast.LENGTH_SHORT).show()
-                        }
-                    },
+                    onClick = viewModel::excluirConta,
+                    enabled = !viewModel.carregando,
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
                 ) {
                     Text("Sim, excluir", color = Color.White)
@@ -419,9 +381,14 @@ fun InfoRow(label: String, valor: String) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 10.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(label, color = Color.Gray)
-        Text(valor, fontWeight = FontWeight.Medium)
+        Text(
+            text = valor,
+            modifier = Modifier.weight(1f),
+            fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.End
+        )
     }
 }

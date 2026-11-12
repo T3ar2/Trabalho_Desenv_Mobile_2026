@@ -5,28 +5,31 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import com.example.evogym.auth.AuthManager
+import com.example.evogym.data.dal.CredenciaisUsuario
 import com.example.evogym.data.model.Equipamento
 import com.example.evogym.data.model.Exercicio
-import com.example.evogym.data.model.UsuarioData
 import com.example.evogym.data.model.Professor
+import com.example.evogym.data.model.UsuarioData
 
-class DatabaseHelper(context: Context) :
+internal class DatabaseHelper(context: Context) :
     SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     companion object {
         private const val DATABASE_NAME = "ecogym.db"
-        private const val DATABASE_VERSION = 5
+        private const val DATABASE_VERSION = 8
 
         const val TABLE_USUARIOS = "usuarios"
         const val COL_ID = "id"
         const val COL_NOME = "nome"
         const val COL_EMAIL = "email"
         const val COL_SENHA = "senha"
+        const val COL_SALT = "salt"
         const val COL_IDADE = "idade"
         const val COL_ALTURA = "altura"
         const val COL_PESO = "peso"
         const val COL_PLANO = "plano"
-        const val COL_PROFESSOR = "professor"
+        const val COL_PROFESSOR_ID = "professor_id"
         const val COL_TREINOS = "treinos"
         const val COL_SEGUIDORES = "seguidores"
         const val COL_DIAS_SEGUIDOS = "dias_seguidos"
@@ -53,18 +56,25 @@ class DatabaseHelper(context: Context) :
         const val COL_PROF_FOTO = "foto"
     }
 
+    override fun onConfigure(db: SQLiteDatabase) {
+        super.onConfigure(db)
+        db.setForeignKeyConstraintsEnabled(true)
+    }
+
     override fun onCreate(db: SQLiteDatabase) {
+        criarTabelaProfessores(db)
         val createTable = """
             CREATE TABLE $TABLE_USUARIOS (
                 $COL_ID INTEGER PRIMARY KEY AUTOINCREMENT,
                 $COL_NOME TEXT NOT NULL,
                 $COL_EMAIL TEXT UNIQUE NOT NULL,
-                $COL_SENHA TEXT NOT NULL,
+                $COL_SENHA BLOB NOT NULL,
+                $COL_SALT BLOB NOT NULL,
                 $COL_IDADE INTEGER DEFAULT 0,
                 $COL_ALTURA TEXT DEFAULT '1.70 m', 
                 $COL_PESO TEXT DEFAULT '70 kg',
                 $COL_PLANO TEXT DEFAULT 'Mensal',
-                $COL_PROFESSOR TEXT DEFAULT 'Joan Mendes',
+                $COL_PROFESSOR_ID INTEGER REFERENCES $TABLE_PROFESSORES($COL_PROF_ID) ON DELETE SET NULL,
                 $COL_TREINOS INTEGER DEFAULT 0,
                 $COL_SEGUIDORES INTEGER DEFAULT 0,
                 $COL_DIAS_SEGUIDOS INTEGER DEFAULT 0,
@@ -78,7 +88,6 @@ class DatabaseHelper(context: Context) :
         inserirExerciciosIniciais(db)
         criarTabelaEquipamentos(db)
         inserirEquipamentosIniciais(db)
-        criarTabelaProfessores(db)
         inserirProfessoresIniciais(db)
     }
 
@@ -92,68 +101,110 @@ class DatabaseHelper(context: Context) :
             db.execSQL("ALTER TABLE $TABLE_USUARIOS ADD COLUMN $COL_ENDERECO TEXT DEFAULT ''")
             criarTabelaEquipamentos(db)
             inserirEquipamentosIniciais(db)
-            db.execSQL("ALTER TABLE $TABLE_USUARIOS ADD COLUMN $COL_FOTO TEXT")
         }
-        if (oldVersion < 5) {
-            criarTabelaProfessores(db)
-            inserirProfessoresIniciais(db)
-        }
-    }
-
-    fun inserirUsuario(
-        nome: String,
-        email: String,
-        senha: String,
-        cep: String,
-        endereco: String
-    ): Long {
-        val db = writableDatabase
-        val values = ContentValues().apply {
-            put(COL_NOME, nome)
-            put(COL_EMAIL, email)
-            put(COL_SENHA, senha)
-            put(COL_IDADE, 25)
-            put(COL_ALTURA, "1.70 m")
-            put(COL_PESO, "70 kg")
-            put(COL_PLANO, "Mensal")
-            put(COL_PROFESSOR, "Joan Mendes")
-            put(COL_TREINOS, 1)
-            put(COL_SEGUIDORES, 0)
-            put(COL_DIAS_SEGUIDOS, 1)
-            put(COL_CEP, cep)
-            put(COL_ENDERECO, endereco)
-        }
-        return db.insert(TABLE_USUARIOS, null, values)
-    }
-
-    fun autenticar(email: String, senha: String): UsuarioData? {
-        val db = readableDatabase
-        val cursor = db.query(
-            TABLE_USUARIOS,
-            null,
-            "$COL_EMAIL = ? AND $COL_SENHA = ?",
-            arrayOf(email, senha),
-            null, null, null
-        )
-
-        return cursor.use {
-            if (it.moveToFirst()) {
-                extrairUsuario(it)
-            } else {
-                null
+        if (oldVersion < 7) {
+            val colunasUsuario = db.rawQuery("SELECT * FROM $TABLE_USUARIOS LIMIT 0", null)
+                .use { it.columnNames }
+            if (COL_SALT !in colunasUsuario) {
+                migrarSenhas(db)
+            }
+            if (COL_FOTO !in colunasUsuario) {
+                db.execSQL("ALTER TABLE $TABLE_USUARIOS ADD COLUMN $COL_FOTO TEXT")
+            }
+            val temTabelaProfessores = db.rawQuery(
+                "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",
+                arrayOf(TABLE_PROFESSORES)
+            ).use { it.moveToFirst() }
+            if (!temTabelaProfessores) {
+                criarTabelaProfessores(db)
+                inserirProfessoresIniciais(db)
             }
         }
+        if (oldVersion < 8) {
+            db.execSQL(
+                "ALTER TABLE $TABLE_USUARIOS ADD COLUMN $COL_PROFESSOR_ID INTEGER " +
+                    "REFERENCES $TABLE_PROFESSORES($COL_PROF_ID) ON DELETE SET NULL"
+            )
+            db.execSQL("""
+                UPDATE $TABLE_USUARIOS
+                SET $COL_PROFESSOR_ID = (
+                    SELECT CASE WHEN COUNT(*) = 1 THEN MIN(p.$COL_PROF_ID) END
+                    FROM $TABLE_PROFESSORES p
+                    WHERE TRIM(p.$COL_PROF_NOME) = TRIM($TABLE_USUARIOS.professor) COLLATE NOCASE
+                )
+            """.trimIndent())
+        }
     }
 
+    private fun migrarSenhas(db: SQLiteDatabase) {
+        db.execSQL("ALTER TABLE $TABLE_USUARIOS ADD COLUMN $COL_SALT BLOB")
+        var ultimoId = 0L
+        while (true) {
+            val conta = db.query(
+                TABLE_USUARIOS, arrayOf(COL_ID, COL_SENHA), "$COL_ID > ?",
+                arrayOf(ultimoId.toString()), null, null, "$COL_ID ASC", "1"
+            ).use { cursor ->
+                if (cursor.moveToFirst()) cursor.getLong(0) to cursor.getString(1) else null
+            } ?: break
 
-    fun buscarPorEmail(email: String): UsuarioData? {
-        val db = readableDatabase
-        val cursor = db.query(
+            val (id, senha) = conta
+            val salt = AuthManager.criarSalt()
+            val hash = AuthManager.gerarHash(senha, salt)
+            try {
+                val valores = ContentValues().apply {
+                    put(COL_SENHA, hash)
+                    put(COL_SALT, salt)
+                }
+                db.update(TABLE_USUARIOS, valores, "$COL_ID = ?", arrayOf(id.toString()))
+            } finally {
+                hash.fill(0)
+            }
+            ultimoId = id
+        }
+    }
+
+    fun inserirUsuario(usuario: UsuarioData, hash: ByteArray, salt: ByteArray): Long {
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put(COL_NOME, usuario.nome)
+            put(COL_EMAIL, usuario.email)
+            put(COL_SENHA, hash)
+            put(COL_SALT, salt)
+            put(COL_IDADE, usuario.idade)
+            put(COL_ALTURA, usuario.altura)
+            put(COL_PESO, usuario.peso)
+            put(COL_PLANO, usuario.plano)
+            put(COL_PROFESSOR_ID, usuario.professorId)
+            put(COL_TREINOS, usuario.treinos)
+            put(COL_SEGUIDORES, usuario.seguidores)
+            put(COL_DIAS_SEGUIDOS, usuario.diasSeguidos)
+            put(COL_CEP, usuario.cep)
+            put(COL_ENDERECO, usuario.endereco)
+        }
+        return db.insertOrThrow(TABLE_USUARIOS, null, values)
+    }
+
+    fun buscarCredenciais(email: String): CredenciaisUsuario? =
+        readableDatabase.query(
             TABLE_USUARIOS,
-            null,
+            arrayOf(COL_ID, COL_SENHA, COL_SALT),
             "$COL_EMAIL = ?",
             arrayOf(email),
             null, null, null
+        ).use { cursor ->
+            if (cursor.moveToFirst()) {
+                CredenciaisUsuario(cursor.getLong(0), cursor.getBlob(1), cursor.getBlob(2))
+            } else null
+        }
+
+    fun buscarUsuarioPorId(id: Long): UsuarioData? {
+        val db = readableDatabase
+        val cursor = db.query(
+            TABLE_USUARIOS,
+            null,
+            "$COL_ID = ?",
+            arrayOf(id.toString()),
+            null, null, null
         )
 
         return cursor.use {
@@ -166,35 +217,27 @@ class DatabaseHelper(context: Context) :
     }
 
 
-    fun atualizarUsuario(
-        emailOriginal: String,
-        novoNome: String,
-        novaIdade: Int,
-        novaAltura: String,
-        novoPeso: String,
-        novoPlano: String,
-        novoProfessor: String
-    ): Int {
+    fun atualizarUsuario(usuario: UsuarioData): Int {
         val db = writableDatabase
         val values = ContentValues().apply {
-            put(COL_NOME, novoNome)
-            put(COL_IDADE, novaIdade)
-            put(COL_ALTURA, novaAltura)
-            put(COL_PESO, novoPeso)
-            put(COL_PLANO, novoPlano)
-            put(COL_PROFESSOR, novoProfessor)
+            put(COL_NOME, usuario.nome)
+            put(COL_IDADE, usuario.idade)
+            put(COL_ALTURA, usuario.altura)
+            put(COL_PESO, usuario.peso)
+            put(COL_PLANO, usuario.plano)
+            put(COL_PROFESSOR_ID, usuario.professorId)
         }
-        return db.update(TABLE_USUARIOS, values, "$COL_EMAIL = ?", arrayOf(emailOriginal))
+        return db.update(TABLE_USUARIOS, values, "$COL_ID = ?", arrayOf(usuario.id.toString()))
     }
 
-    fun atualizarFoto(email: String, caminho: String?): Int {
+    fun atualizarFoto(id: Long, caminho: String?): Int {
         val values = ContentValues().apply { put(COL_FOTO, caminho) }
-        return writableDatabase.update(TABLE_USUARIOS, values, "$COL_EMAIL = ?", arrayOf(email))
+        return writableDatabase.update(TABLE_USUARIOS, values, "$COL_ID = ?", arrayOf(id.toString()))
     }
 
-    fun excluirUsuario(email: String): Int {
+    fun excluirUsuario(id: Long): Int {
         val db = writableDatabase
-        return db.delete(TABLE_USUARIOS, "$COL_EMAIL = ?", arrayOf(email))
+        return db.delete(TABLE_USUARIOS, "$COL_ID = ?", arrayOf(id.toString()))
     }
 
     fun inserirExercicio(nome: String, categoria: String): Long {
@@ -430,21 +473,22 @@ class DatabaseHelper(context: Context) :
     }
 
     private fun extrairUsuario(cursor: android.database.Cursor): UsuarioData {
+        val colunaProfessor = cursor.getColumnIndexOrThrow(COL_PROFESSOR_ID)
         return UsuarioData(
             id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_ID)),
             nome = cursor.getString(cursor.getColumnIndexOrThrow(COL_NOME)),
             email = cursor.getString(cursor.getColumnIndexOrThrow(COL_EMAIL)),
-            senha = cursor.getString(cursor.getColumnIndexOrThrow(COL_SENHA)),
             idade = cursor.getInt(cursor.getColumnIndexOrThrow(COL_IDADE)),
             altura = cursor.getString(cursor.getColumnIndexOrThrow(COL_ALTURA)),
             peso = cursor.getString(cursor.getColumnIndexOrThrow(COL_PESO)),
             plano = cursor.getString(cursor.getColumnIndexOrThrow(COL_PLANO)),
-            professor = cursor.getString(cursor.getColumnIndexOrThrow(COL_PROFESSOR)),
+            professorId = if (cursor.isNull(colunaProfessor)) null else cursor.getLong(colunaProfessor),
             treinos = cursor.getInt(cursor.getColumnIndexOrThrow(COL_TREINOS)),
             seguidores = cursor.getInt(cursor.getColumnIndexOrThrow(COL_SEGUIDORES)),
             diasSeguidos = cursor.getInt(cursor.getColumnIndexOrThrow(COL_DIAS_SEGUIDOS)),
             cep = cursor.getString(cursor.getColumnIndexOrThrow(COL_CEP)) ?: "",
             endereco = cursor.getString(cursor.getColumnIndexOrThrow(COL_ENDERECO)) ?: "",
+            foto = cursor.getString(cursor.getColumnIndexOrThrow(COL_FOTO))
         )
     }
 

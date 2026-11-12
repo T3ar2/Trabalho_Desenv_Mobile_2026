@@ -8,12 +8,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.evogym.ui.theme.EvoGymTheme
+import com.example.evogym.auth.SessaoUsuario
 import com.example.evogym.navigation.AppNavigation
 import com.example.evogym.navigation.Menu
+import com.example.evogym.navigation.ehTelaDeAutenticacao
+import com.example.evogym.ui.theme.EvoGymTheme
 
 class MainActivity : ComponentActivity() {
 
@@ -24,26 +25,16 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             EvoGymTheme {
-
-
                 val navController = rememberNavController()
-
-
-
-                val backStackEntry by
-                navController.currentBackStackEntryAsState()
-
-                val rotaAtual = backStackEntry?.destination?.route
-
-                val mostrarMenu = rotaAtual != null &&
-                        !rotaAtual.contains("Login") &&
-                        !rotaAtual.contains("Cadastro")
+                val entradaAtual by navController.currentBackStackEntryAsState()
+                val destino = entradaAtual?.destination
+                val mostrarMenu = SessaoUsuario.usuario != null &&
+                        destino?.ehTelaDeAutenticacao() == false
 
                 Scaffold(
-
-                        topBar = {
-                            if (mostrarMenu){Menu(navController = navController) }
-                        }
+                    topBar = {
+                        if (mostrarMenu) Menu(navController = navController)
+                    }
                 ) { innerPadding ->
                     AppNavigation(
                         navController = navController,

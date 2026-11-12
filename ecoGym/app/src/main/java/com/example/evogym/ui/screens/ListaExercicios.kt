@@ -1,7 +1,6 @@
 package com.example.evogym.ui.screens
 
 import android.widget.Toast
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,9 +17,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -55,7 +52,6 @@ fun ListaExerciciosScreen(
 ) {
     val context = LocalContext.current
     var textoBusca by remember { mutableStateOf("") }
-    var filtroSelecionado by remember { mutableStateOf<String?>(null) }
     var formularioAberto by remember { mutableStateOf(false) }
     var idEmEdicao by remember { mutableStateOf(0L) }
     var nome by remember { mutableStateOf("") }
@@ -73,8 +69,7 @@ fun ListaExerciciosScreen(
     }
 
     val listaFiltrada = viewModel.exercicios.filter { exercicio ->
-        exercicio.nome.contains(textoBusca, ignoreCase = true) &&
-            (filtroSelecionado == null || exercicio.categoria == filtroSelecionado)
+        exercicio.nome.contains(textoBusca, ignoreCase = true)
     }
 
     fun abrirFormulario(exercicio: Exercicio? = null) {
@@ -86,8 +81,6 @@ fun ListaExerciciosScreen(
 
     Column(modifier = modifier.fillMaxWidth().background(BrancoBackground)) {
         CabecalhoExercicios(
-            filtroSelecionado = filtroSelecionado,
-            onFiltroClick = { filtro -> filtroSelecionado = if (filtroSelecionado == filtro) null else filtro },
             onVoltarClick = onVoltarClick,
             onNovoClick = { abrirFormulario() }
         )
@@ -136,7 +129,6 @@ fun ListaExerciciosScreen(
 
 @Composable
 private fun CabecalhoExercicios(
-    filtroSelecionado: String?, onFiltroClick: (String) -> Unit,
     onVoltarClick: () -> Unit, onNovoClick: () -> Unit
 ) {
     Column(
@@ -153,17 +145,6 @@ private fun CabecalhoExercicios(
                 modifier = Modifier.weight(1f).padding(start = 5.dp)
             )
             IconButton(onClick = onNovoClick) { Icon(Icons.Default.Add, "Cadastrar exercício", tint = Color.White) }
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf("Força", "Mobilidade", "Resistência").forEach { filtro ->
-                Button(
-                    onClick = { onFiltroClick(filtro) }, shape = RoundedCornerShape(16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (filtroSelecionado == filtro) AzulTiffany else Color.White.copy(alpha = 0.05f)
-                    ),
-                    border = BorderStroke(1.dp, if (filtroSelecionado == filtro) Color.Transparent else Color.White.copy(alpha = 0.1f))
-                ) { Text(filtro) }
-            }
         }
     }
 }
@@ -189,7 +170,6 @@ private fun FormularioExercicio(
 
 @Composable
 private fun CardExercicio(exercicio: Exercicio, onEditar: () -> Unit, onExcluir: () -> Unit) {
-    val context = LocalContext.current
     Card(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
         shape = RoundedCornerShape(16.dp)
@@ -202,9 +182,6 @@ private fun CardExercicio(exercicio: Exercicio, onEditar: () -> Unit, onExcluir:
                 Text(exercicio.nome, fontWeight = FontWeight.Bold)
                 Text(exercicio.categoria, color = AzulTiffany, fontSize = 12.sp)
             }
-            IconButton(onClick = {
-                Toast.makeText(context, "Abrindo vídeo: ${exercicio.nome}", Toast.LENGTH_SHORT).show()
-            }) { Icon(Icons.Default.PlayArrow, "Tocar exercício", tint = AzulTiffany) }
             IconButton(onClick = onEditar) { Icon(Icons.Default.Edit, "Alterar exercício", tint = AzulEscuro) }
             IconButton(onClick = onExcluir) { Icon(Icons.Default.Delete, "Excluir exercício", tint = Color.Red) }
         }

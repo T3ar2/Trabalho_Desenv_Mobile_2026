@@ -1,5 +1,7 @@
 package com.example.evogym.navigation
 
+import androidx.navigation.NavDestination
+import androidx.navigation.NavDestination.Companion.hasRoute
 import kotlinx.serialization.Serializable
 
 
@@ -21,3 +23,6 @@ object Login
 
 @Serializable
 object Cadastro
+
+internal fun NavDestination.ehTelaDeAutenticacao(): Boolean =
+    hasRoute<Login>() || hasRoute<Cadastro>()

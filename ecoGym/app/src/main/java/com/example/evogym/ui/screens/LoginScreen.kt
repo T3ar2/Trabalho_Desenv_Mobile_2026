@@ -1,6 +1,5 @@
 package com.example.evogym.ui.screens
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -14,6 +13,7 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -25,22 +25,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavDeepLink
-import com.example.evogym.auth.AuthManager
+import com.example.evogym.ui.viewmodel.AuthViewModel
 
 @Composable
 fun LoginScreen(
-    loginSucesso: () -> Unit,
-    irCadastro: () -> Unit
+    irCadastro: () -> Unit,
+    viewModel: AuthViewModel
 ){
     var email by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
     var senhaVisivel by remember { mutableStateOf(false) }
-    val context = LocalContext.current
 
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -55,6 +52,7 @@ fun LoginScreen(
             value = email,
             onValueChange = { email = it },
             label = { Text("E-mail") },
+            enabled = !viewModel.carregando,
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -62,8 +60,9 @@ fun LoginScreen(
 
         OutlinedTextField(
             value = senha,
-            onValueChange = { senha = it},
+            onValueChange = { senha = it },
             label = { Text("Senha") },
+            enabled = !viewModel.carregando,
             visualTransformation = if (senhaVisivel) VisualTransformation.None
             else PasswordVisualTransformation(),
             trailingIcon = {
@@ -79,25 +78,22 @@ fun LoginScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(Modifier.height(16.dp))
+        viewModel.mensagem?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+        if (viewModel.carregando) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
 
-        Button(onClick = {
-            if (email.isBlank() || senha.isBlank()) {
-                Toast.makeText(context, "Preencha todos os campos!", Toast.LENGTH_SHORT).show()
-            } else if (AuthManager.login(context, email, senha)){
-                loginSucesso()
-            } else {
-                Toast.makeText(context,
-                    "E-mail ou Senha Inválido!",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-        }, modifier = Modifier.fillMaxWidth()
+        Spacer(Modifier.height(16.dp))
+        Button(
+            onClick = {
+                viewModel.login(email, senha)
+                senha = ""
+            },
+            enabled = !viewModel.carregando,
+            modifier = Modifier.fillMaxWidth()
         ) {
             Text("Entrar")
         }
 
-        TextButton(onClick = irCadastro) {
+        TextButton(onClick = irCadastro, enabled = !viewModel.carregando) {
             Text("Não tem conta? Cadastre-se")
         }
     }

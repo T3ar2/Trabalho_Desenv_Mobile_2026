@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -32,31 +33,45 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.evogym.auth.AuthManager
+import com.example.evogym.ui.components.SeletorProfessor
+import com.example.evogym.ui.theme.AzulTiffany
+import com.example.evogym.ui.viewmodel.AuthViewModel
 import com.example.evogym.ui.viewmodel.CepViewModel
+import com.example.evogym.ui.viewmodel.ProfessoresViewModel
 import kotlinx.coroutines.delay
 
 @Composable
 fun CadastroScreen(
     irLogin: () -> Unit,
-    cepViewModel: CepViewModel = viewModel()
+    authViewModel: AuthViewModel,
+    cepViewModel: CepViewModel = viewModel(),
+    professoresViewModel: ProfessoresViewModel = viewModel()
 ) {
     var nome by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var senha by remember { mutableStateOf("") }
     var senhaVisivel by remember { mutableStateOf(false) }
-    var cadastroConcluido by remember { mutableStateOf(false) }
+    var idade by remember { mutableStateOf("") }
+    var altura by remember { mutableStateOf("") }
+    var peso by remember { mutableStateOf("") }
+    var plano by remember { mutableStateOf("") }
+    var professorId by remember { mutableStateOf<Long?>(null) }
     val context = LocalContext.current
     val endereco = cepViewModel.endereco
+    val podeEditar = !authViewModel.carregando && !authViewModel.cadastroConcluido
 
-    LaunchedEffect(cadastroConcluido) {
-        if (cadastroConcluido) {
+    LaunchedEffect(professoresViewModel) { professoresViewModel.listar() }
+
+    LaunchedEffect(authViewModel.cadastroConcluido) {
+        if (authViewModel.cadastroConcluido) {
+            Toast.makeText(context, "Cadastro realizado com sucesso!", Toast.LENGTH_SHORT).show()
             delay(1500)
             irLogin()
         }
@@ -79,6 +94,7 @@ fun CadastroScreen(
             value = nome,
             onValueChange = { nome = it },
             label = { Text("Nome") },
+            enabled = podeEditar,
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(16.dp))
@@ -87,6 +103,7 @@ fun CadastroScreen(
             value = email,
             onValueChange = { email = it },
             label = { Text("E-mail") },
+            enabled = podeEditar,
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -96,6 +113,7 @@ fun CadastroScreen(
             value = senha,
             onValueChange = { senha = it },
             label = { Text("Senha") },
+            enabled = podeEditar,
             visualTransformation = if (senhaVisivel) VisualTransformation.None
             else PasswordVisualTransformation(),
             trailingIcon = {
@@ -113,13 +131,30 @@ fun CadastroScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            CampoPerfil("Idade", idade, { idade = it }, podeEditar, KeyboardType.Number)
+            CampoPerfil("Altura (m)", altura, { altura = it }, podeEditar, KeyboardType.Decimal)
+            CampoPerfil("Peso (kg)", peso, { peso = it }, podeEditar, KeyboardType.Decimal)
+            CampoPerfil("Plano", plano, { plano = it }, podeEditar)
+            SeletorProfessor(
+                professores = professoresViewModel.professores,
+                selecionadoId = professorId,
+                selecionar = { professorId = it },
+                habilitado = podeEditar && !professoresViewModel.carregando &&
+                    professoresViewModel.mensagem == null
+            )
+            professoresViewModel.mensagem?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         OutlinedTextField(
             value = cepViewModel.cep,
             onValueChange = cepViewModel::mudarCep,
             label = { Text("CEP") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             singleLine = true,
-            enabled = !cepViewModel.carregando,
+            enabled = podeEditar && !cepViewModel.carregando,
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -127,7 +162,7 @@ fun CadastroScreen(
 
         OutlinedButton(
             onClick = cepViewModel::consultar,
-            enabled = !cepViewModel.carregando,
+            enabled = podeEditar && !cepViewModel.carregando,
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Buscar CEP")
@@ -152,36 +187,57 @@ fun CadastroScreen(
             }
         }
 
-        Spacer(Modifier.height(16.dp))
+        authViewModel.mensagem?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+        if (authViewModel.carregando) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
 
+        Spacer(Modifier.height(16.dp))
         Button(
             onClick = {
-                if (nome.isBlank() || email.isBlank() || senha.isBlank()) {
-                    Toast.makeText(context, "Preencha todos os campos", Toast.LENGTH_SHORT).show()
-                } else {
-                    val cadastrou = AuthManager.cadastro(
-                        context = context,
-                        nome = nome,
-                        email = email,
-                        senha = senha,
-                        cep = endereco?.cep.orEmpty(),
-                        endereco = endereco?.formatado().orEmpty()
-                    )
-                    if (cadastrou) {
-                        Toast.makeText(context, "Cadastro realizado com Sucesso!", Toast.LENGTH_SHORT).show()
-                        cadastroConcluido = true
-                    } else {
-                        Toast.makeText(context, "E-mail já cadastrado!", Toast.LENGTH_LONG).show()
-                    }
-                }
+                authViewModel.cadastrar(
+                    nome = nome,
+                    email = email,
+                    senha = senha,
+                    idade = idade,
+                    altura = altura,
+                    peso = peso,
+                    plano = plano,
+                    professorId = professorId,
+                    cep = endereco?.cep ?: cepViewModel.cep,
+                    endereco = endereco?.formatado().orEmpty()
+                )
+                senha = ""
             },
+            enabled = podeEditar && !cepViewModel.carregando,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = AzulTiffany,
+                contentColor = Color.Black
+            ),
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Cadastrar")
         }
 
-        TextButton(onClick = irLogin) {
+        TextButton(onClick = irLogin, enabled = podeEditar) {
             Text("Já tenho cadastro.")
         }
     }
+}
+
+@Composable
+private fun CampoPerfil(
+    rotulo: String,
+    valor: String,
+    mudarValor: (String) -> Unit,
+    habilitado: Boolean,
+    tipoTeclado: KeyboardType = KeyboardType.Text
+) {
+    OutlinedTextField(
+        value = valor,
+        onValueChange = mudarValor,
+        label = { Text(rotulo) },
+        enabled = habilitado,
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(keyboardType = tipoTeclado),
+        modifier = Modifier.fillMaxWidth()
+    )
 }

@@ -27,7 +27,6 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -65,7 +64,6 @@ fun ListaDeProfessores(
 ) {
     val context = LocalContext.current
     var textoBusca by remember { mutableStateOf("") }
-    var filtroSelecionado by remember { mutableStateOf("Todos") }
     var formularioAberto by remember { mutableStateOf(false) }
     var idEmEdicao by remember { mutableStateOf(0L) }
     var nome by remember { mutableStateOf("") }
@@ -90,9 +88,7 @@ fun ListaDeProfessores(
     }
 
     val listaFiltrada = viewModel.professores.filter { professor ->
-        professor.nome.contains(textoBusca, ignoreCase = true) &&
-            (filtroSelecionado == "Todos" ||
-                professor.especialidade.contains(filtroSelecionado, ignoreCase = true))
+        professor.nome.contains(textoBusca, ignoreCase = true)
     }
 
     fun abrirFormulario(professor: Professor? = null) {
@@ -153,25 +149,6 @@ fun ListaDeProfessores(
                     )
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    listOf("Todos", "Crossfit", "Cardio", "Mobilidade").forEach { filtro ->
-                        Button(
-                            onClick = { filtroSelecionado = filtro },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (filtroSelecionado == filtro) Color(0xFF26A69A)
-                                else Color(0xFF40405E)
-                            ),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text(filtro)
-                        }
-                    }
-                }
             }
 
             // ---------- Formulário ----------

@@ -32,14 +32,15 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.evogym.auth.AuthManager
+import com.example.evogym.data.model.UsuarioData
 import com.example.evogym.ui.components.AvatarUsuario
 import com.example.evogym.ui.theme.HomeScreenBackground
 import com.example.evogym.ui.theme.HomeScreenCardBackground1
 import com.example.evogym.ui.theme.HomeScreenCardBackground2
 
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier,
+fun HomeScreen(usuario: UsuarioData,
+               modifier: Modifier = Modifier,
                onExerciciosClick: () -> Unit = {},
                onProfessoresClick: () -> Unit = {},
                onPerfilClick: () -> Unit = {},
@@ -52,25 +53,23 @@ fun HomeScreen(modifier: Modifier = Modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        AuthManager.usuarioLogado?.let { usuario ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                AvatarUsuario(
-                    nome = usuario.nome,
-                    foto = usuario.foto,
-                    tamanho = 48.dp,
-                    onClick = onPerfilClick
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = "Olá, ${usuario.nome.substringBefore(" ")}!",
-                    color = Color.White,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AvatarUsuario(
+                nome = usuario.nome,
+                foto = usuario.foto,
+                tamanho = 48.dp,
+                onClick = onPerfilClick
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = "Olá, ${usuario.nome.substringBefore(" ")}!",
+                color = Color.White,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold
+            )
         }
 
         Spacer(modifier = Modifier.weight(1f))

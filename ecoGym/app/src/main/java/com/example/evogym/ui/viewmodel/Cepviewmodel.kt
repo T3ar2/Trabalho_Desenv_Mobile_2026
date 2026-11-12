@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.evogym.data.model.Endereco
 import com.example.evogym.data.remote.ViaCepApi
+import com.example.evogym.validation.CadastroValidator
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
@@ -33,7 +34,7 @@ class CepViewModel : ViewModel() {
         endereco = null
         mensagem = null
 
-        if (!Regex("[0-9]{5}-?[0-9]{3}").matches(cep)) {
+        if (!CadastroValidator.cepValido(cep)) {
             mensagem = "Informe um CEP válido"
             return
         }

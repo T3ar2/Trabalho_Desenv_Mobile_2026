@@ -1,83 +1,30 @@
 package com.example.evogym.auth
 
-import android.content.Context
-import com.example.evogym.data.local.DatabaseHelper
-import com.example.evogym.data.local.FotoPerfilStorage
-import com.example.evogym.data.model.UsuarioData
-import java.io.File
+import java.security.MessageDigest
+import java.security.SecureRandom
+import javax.crypto.SecretKeyFactory
+import javax.crypto.spec.PBEKeySpec
 
-object AuthManager {
-    var usuarioLogado: UsuarioData? = null
-        private set
+internal object AuthManager {
+    private const val ITERACOES = 100_000
 
-    fun login(context: Context, email: String, senha: String): Boolean {
-        val db = DatabaseHelper(context)
-        val usuario = db.autenticar(email.trim(), senha)
-        return if (usuario != null) {
-            usuarioLogado = usuario
-            true
-        } else {
-            false
+    fun criarSalt(): ByteArray = ByteArray(16).also { SecureRandom().nextBytes(it) }
+
+    fun gerarHash(senha: String, salt: ByteArray): ByteArray {
+        val spec = PBEKeySpec(senha.toCharArray(), salt, ITERACOES, 256)
+        return try {
+            SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1").generateSecret(spec).encoded
+        } finally {
+            spec.clearPassword()
         }
     }
 
-    fun cadastro(context: Context, nome: String, email: String, senha: String, cep: String, endereco: String ): Boolean {
-        val db = DatabaseHelper(context)
-        val resultado = db.inserirUsuario(nome.trim(), email.trim(), senha, cep, endereco)
-        return resultado != -1L
-    }
-
-    fun atualizarPerfil(
-        nome: String,
-        idade: Int,
-        altura: String,
-        peso: String,
-        plano: String,
-        professor: String,
-        context: Context
-    ): Boolean {
-        val email = usuarioLogado?.email ?: return false
-        val db = DatabaseHelper(context)
-        val linhas = db.atualizarUsuario(
-            emailOriginal = email,
-            novoNome = nome,
-            novaIdade = idade,
-            novaAltura = altura,
-            novoPeso = peso,
-            novoPlano = plano,
-            novoProfessor = professor
-        )
-        if (linhas > 0) {
-            usuarioLogado = db.buscarPorEmail(email)
-            return true
+    fun validarSenha(senha: String, salt: ByteArray, hash: ByteArray): Boolean {
+        val calculado = gerarHash(senha, salt)
+        return try {
+            MessageDigest.isEqual(hash, calculado)
+        } finally {
+            calculado.fill(0)
         }
-        return false
-    }
-
-    fun atualizarFoto(context: Context, novaFoto: File?): Boolean {
-        val usuario = usuarioLogado ?: return false
-        val db = DatabaseHelper(context)
-        val linhas = db.atualizarFoto(usuario.email, novaFoto?.path)
-        if (linhas > 0) {
-            usuarioLogado = db.buscarPorEmail(usuario.email)
-            FotoPerfilStorage.remover(context, usuario.id, manter = novaFoto)
-            return true
-        }
-        return false
-    }
-
-    fun excluirConta(context: Context): Boolean {
-        val email = usuarioLogado?.email ?: return false
-        val db = DatabaseHelper(context)
-        val linhas = db.excluirUsuario(email)
-        if (linhas > 0) {
-            usuarioLogado = null
-            return true
-        }
-        return false
-    }
-
-    fun logout() {
-        usuarioLogado = null
     }
 }
