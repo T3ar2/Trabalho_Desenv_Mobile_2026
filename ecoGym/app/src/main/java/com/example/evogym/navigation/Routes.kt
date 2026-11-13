@@ -16,6 +16,8 @@ data object ListaExercicios
 @Serializable
 data object ListaEquipamentos
 @Serializable
+data object ListaTreinos
+@Serializable
 data object PainelUsuario
 
 @Serializable
@@ -26,3 +28,6 @@ object Cadastro
 
 internal fun NavDestination.ehTelaDeAutenticacao(): Boolean =
     hasRoute<Login>() || hasRoute<Cadastro>()
+
+internal fun NavDestination.deveExibirMenu(): Boolean =
+    !ehTelaDeAutenticacao() && !hasRoute<HomeScreen>()

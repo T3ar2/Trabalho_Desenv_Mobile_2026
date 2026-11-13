@@ -10,6 +10,7 @@ import com.example.evogym.data.dal.CredenciaisUsuario
 import com.example.evogym.data.model.Equipamento
 import com.example.evogym.data.model.Exercicio
 import com.example.evogym.data.model.Professor
+import com.example.evogym.data.model.Treino
 import com.example.evogym.data.model.UsuarioData
 
 internal class DatabaseHelper(context: Context) :
@@ -17,7 +18,7 @@ internal class DatabaseHelper(context: Context) :
 
     companion object {
         private const val DATABASE_NAME = "ecogym.db"
-        private const val DATABASE_VERSION = 8
+        private const val DATABASE_VERSION = 9
 
         const val TABLE_USUARIOS = "usuarios"
         const val COL_ID = "id"
@@ -54,6 +55,13 @@ internal class DatabaseHelper(context: Context) :
         const val COL_PROF_NOME = "nome"
         const val COL_PROF_ESPECIALIDADE = "especialidade"
         const val COL_PROF_FOTO = "foto"
+        const val TABLE_TREINOS = "treinos"
+        const val COL_TREINO_ID = "id"
+        const val COL_TREINO_EXERCICIO_ID = "exercicio_id"
+        const val COL_TREINO_PROFESSOR_ID = "professor_id"
+        const val COL_TREINO_USUARIO_ID = "usuario_id"
+        const val COL_TREINO_SERIES = "series"
+        const val COL_TREINO_REPETICOES = "repeticoes"
     }
 
     override fun onConfigure(db: SQLiteDatabase) {
@@ -62,7 +70,10 @@ internal class DatabaseHelper(context: Context) :
     }
 
     override fun onCreate(db: SQLiteDatabase) {
+
         criarTabelaProfessores(db)
+
+
         val createTable = """
             CREATE TABLE $TABLE_USUARIOS (
                 $COL_ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -89,6 +100,7 @@ internal class DatabaseHelper(context: Context) :
         criarTabelaEquipamentos(db)
         inserirEquipamentosIniciais(db)
         inserirProfessoresIniciais(db)
+        criarTabelaTreinos(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -132,7 +144,11 @@ internal class DatabaseHelper(context: Context) :
                     FROM $TABLE_PROFESSORES p
                     WHERE TRIM(p.$COL_PROF_NOME) = TRIM($TABLE_USUARIOS.professor) COLLATE NOCASE
                 )
+            
             """.trimIndent())
+        }
+        if (oldVersion < 9) {
+            criarTabelaTreinos(db)
         }
     }
 
@@ -369,6 +385,75 @@ internal class DatabaseHelper(context: Context) :
         arrayOf(id.toString())
     )
 
+    fun inserirTreino(exercicioId: Long, professorId: Long, usuarioId: Long?, series: Int, repeticoes: Int): Long {
+        val db = writableDatabase
+        val valores = ContentValues().apply {
+            put("exercicio_id", exercicioId)
+            put("professor_id", professorId)
+            put("usuario_id", usuarioId)
+            put("series", series)
+            put("repeticoes", repeticoes)
+        }
+        return db.insert(TABLE_TREINOS, null, valores)
+    }
+
+    fun listarTreinos(): List<Treino> {
+        val lista = mutableListOf<Treino>()
+        val db = readableDatabase
+        val cursor = db.query(
+            TABLE_TREINOS,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "$COL_TREINO_ID DESC"
+        )
+        cursor.use {
+            while (it.moveToNext()) {
+                lista.add(extrairTreino(it))
+            }
+        }
+        return lista
+    }
+
+    fun atualizarTreino(treino: Treino): Int {
+        val db = writableDatabase
+        val valores = ContentValues().apply {
+            put(COL_TREINO_EXERCICIO_ID, treino.exercicioId)
+            put(COL_TREINO_PROFESSOR_ID, treino.professorId)
+            put(COL_TREINO_USUARIO_ID, treino.usuarioId)
+            put(COL_TREINO_SERIES, treino.series)
+            put(COL_TREINO_REPETICOES, treino.repeticoes)
+        }
+        return db.update(TABLE_TREINOS, valores, "$COL_TREINO_ID = ?", arrayOf(treino.id.toString()))
+    }
+
+    fun excluirTreino(id: Long): Int {
+        val db = writableDatabase
+        return db.delete(TABLE_TREINOS, "id = ?", arrayOf(id.toString()))
+    }
+
+    fun listarUsuarios(): List<UsuarioData> {
+        val lista = mutableListOf<UsuarioData>()
+        val db = readableDatabase
+        val colunas = arrayOf(COL_ID, COL_NOME, COL_EMAIL)
+        val cursor = db.query(TABLE_USUARIOS, colunas, null, null, null, null, "$COL_NOME ASC")
+        cursor.use {
+            while (it.moveToNext()) {
+                lista.add(
+                    UsuarioData(
+                        id = it.getLong(it.getColumnIndexOrThrow(COL_ID)),
+                        nome = it.getString(it.getColumnIndexOrThrow(COL_NOME)),
+                        email = it.getString(it.getColumnIndexOrThrow(COL_EMAIL))
+                    )
+                )
+            }
+        }
+        return lista
+    }
+
+
     private fun criarTabelaExercicios(db: SQLiteDatabase) {
         db.execSQL(
             """
@@ -406,6 +491,19 @@ internal class DatabaseHelper(context: Context) :
             )
             """.trimIndent()
         )
+    }
+
+    private fun criarTabelaTreinos(db: SQLiteDatabase){
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS $TABLE_TREINOS (
+                $COL_TREINO_ID INTEGER PRIMARY KEY AUTOINCREMENT,
+                $COL_TREINO_EXERCICIO_ID INTEGER NOT NULL REFERENCES $TABLE_EXERCICIOS($COL_EXERCICIO_ID) ON DELETE CASCADE,
+                $COL_TREINO_PROFESSOR_ID INTEGER NOT NULL REFERENCES $TABLE_PROFESSORES($COL_PROF_ID) ON DELETE CASCADE,
+                $COL_TREINO_USUARIO_ID INTEGER REFERENCES $TABLE_USUARIOS($COL_ID) ON DELETE SET NULL,
+                $COL_TREINO_SERIES INTEGER NOT NULL,
+                $COL_TREINO_REPETICOES INTEGER NOT NULL
+            )
+        """.trimIndent())
     }
 
     private fun inserirExerciciosIniciais(db: SQLiteDatabase) {
@@ -512,6 +610,18 @@ internal class DatabaseHelper(context: Context) :
             nome = cursor.getString(cursor.getColumnIndexOrThrow(COL_PROF_NOME)),
             especialidade = cursor.getString(cursor.getColumnIndexOrThrow(COL_PROF_ESPECIALIDADE)),
             foto = cursor.getString(cursor.getColumnIndexOrThrow(COL_PROF_FOTO))
+        )
+    }
+
+    private fun extrairTreino(cursor: Cursor): Treino {
+        val colUsuarioId = cursor.getColumnIndexOrThrow(COL_TREINO_USUARIO_ID)
+        return Treino(
+            id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_TREINO_ID)),
+            exercicioId = cursor.getLong(cursor.getColumnIndexOrThrow(COL_TREINO_EXERCICIO_ID)),
+            professorId = cursor.getLong(cursor.getColumnIndexOrThrow(COL_TREINO_PROFESSOR_ID)),
+            usuarioId = if (cursor.isNull(colUsuarioId)) null else cursor.getLong(colUsuarioId),
+            series = cursor.getInt(cursor.getColumnIndexOrThrow(COL_TREINO_SERIES)),
+            repeticoes = cursor.getInt(cursor.getColumnIndexOrThrow(COL_TREINO_REPETICOES))
         )
     }
 }

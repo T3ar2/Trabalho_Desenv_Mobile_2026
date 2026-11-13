@@ -44,7 +44,8 @@ fun HomeScreen(usuario: UsuarioData,
                onExerciciosClick: () -> Unit = {},
                onProfessoresClick: () -> Unit = {},
                onPerfilClick: () -> Unit = {},
-               onEquipamentoClick: () -> Unit = {}
+               onEquipamentoClick: () -> Unit = {},
+               onTreinosClick: () -> Unit = {}
 ) {
 
 
@@ -128,6 +129,17 @@ fun HomeScreen(usuario: UsuarioData,
                     backgroundColor = HomeScreenCardBackground2,
                     modifier = Modifier.weight(1f),
                     onClick = onPerfilClick
+                )
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Cards(
+                    text = "Treinos",
+                    icon = Icons.Outlined.CalendarMonth,
+                    backgroundColor = HomeScreenCardBackground1,
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = onTreinosClick
                 )
             }
         }
