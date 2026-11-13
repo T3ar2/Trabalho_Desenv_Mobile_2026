@@ -28,3 +28,6 @@ object Cadastro
 
 internal fun NavDestination.ehTelaDeAutenticacao(): Boolean =
     hasRoute<Login>() || hasRoute<Cadastro>()
+
+internal fun NavDestination.deveExibirMenu(): Boolean =
+    !ehTelaDeAutenticacao() && !hasRoute<HomeScreen>()

@@ -13,7 +13,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.evogym.auth.SessaoUsuario
 import com.example.evogym.navigation.AppNavigation
 import com.example.evogym.navigation.Menu
-import com.example.evogym.navigation.ehTelaDeAutenticacao
+import com.example.evogym.navigation.deveExibirMenu
 import com.example.evogym.ui.theme.EvoGymTheme
 
 class MainActivity : ComponentActivity() {
@@ -29,7 +29,7 @@ class MainActivity : ComponentActivity() {
                 val entradaAtual by navController.currentBackStackEntryAsState()
                 val destino = entradaAtual?.destination
                 val mostrarMenu = SessaoUsuario.usuario != null &&
-                        destino?.ehTelaDeAutenticacao() == false
+                        destino?.deveExibirMenu() == true
 
                 Scaffold(
                     topBar = {
