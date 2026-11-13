@@ -272,7 +272,6 @@ private fun FormularioTreino(
                 color = AzulEscuro
             )
 
-            // Dropdown Exercício
             CaixaSelecao(
                 label = "Exercício",
                 textoSelecionado = exercicios.firstOrNull { it.id == exercicioId }?.nome ?: "Selecione o exercício",
@@ -280,7 +279,6 @@ private fun FormularioTreino(
                 onItemSelecionado = onExercicioSelecionado
             )
 
-            // Dropdown Professor
             CaixaSelecao(
                 label = "Professor Instrutor",
                 textoSelecionado = professores.firstOrNull { it.id == professorId }?.nome ?: "Selecione o professor",
@@ -288,10 +286,9 @@ private fun FormularioTreino(
                 onItemSelecionado = onProfessorSelecionado
             )
 
-            // Dropdown Aluno (Opcional)
             CaixaSelecaoOpcional(
-                label = "Aluno (Opcional)",
-                textoSelecionado = alunos.firstOrNull { it.id == usuarioId }?.nome ?: "Sem aluno vinculado (Geral)",
+                label = "Aluno",
+                textoSelecionado = alunos.firstOrNull { it.id == usuarioId }?.nome ?: "Sem aluno vinculado",
                 itens = alunos.map { it.id to it.nome },
                 onItemSelecionado = onUsuarioSelecionado
             )
@@ -360,7 +357,6 @@ private fun CaixaSelecao(
                     .fillMaxWidth()
                     .clickable { expandido = true }
             )
-            // Overlay invisível para capturar o clique no TextField
             Box(
                 modifier = Modifier
                     .matchParentSize()
@@ -422,7 +418,7 @@ private fun CaixaSelecaoOpcional(
                 modifier = Modifier.fillMaxWidth(0.85f)
             ) {
                 DropdownMenuItem(
-                    text = { Text("Sem aluno vinculado (Geral)", color = Color.Gray) },
+                    text = { Text("Sem aluno vinculado", color = Color.Gray) },
                     onClick = {
                         onItemSelecionado(null)
                         expandido = false

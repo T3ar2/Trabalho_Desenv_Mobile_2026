@@ -62,15 +62,40 @@ class TreinosViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    private fun mapearParaDetalhados(
+        listaTreinos: List<Treino>,
+        listaExercicios: List<Exercicio>,
+        listaProfessores: List<Professor>,
+        listaAlunos: List<UsuarioData>
+    ): List<TreinoDetalhado> {
+        val exerciciosMap = listaExercicios.associateBy { it.id }
+        val professoresMap = listaProfessores.associateBy { it.id }
+        val alunosMap = listaAlunos.associateBy { it.id }
+        return listaTreinos.map { treino ->
+            TreinoDetalhado(
+                id = treino.id,
+                exercicioId = treino.exercicioId,
+                professorId = treino.professorId,
+                usuarioId = treino.usuarioId,
+                exercicioNome = exerciciosMap[treino.exercicioId]?.nome ?: "",
+                professorNome = professoresMap[treino.professorId]?.nome ?: "",
+                usuarioNome = treino.usuarioId?.let { alunosMap[it]?.nome },
+                series = treino.series,
+                repeticoes = treino.repeticoes
+            )
+        }
+    }
+
     fun carregarDados() = executar {
         withContext(Dispatchers.IO) {
-            val listaTreinos = treinoDao.listarDetalhados()
+            val listaTreinos = treinoDao.listar()
             val listaExercicios = exercicioDao.listar()
             val listaProfessores = professorDao.listar()
             val listaAlunos = usuarioDao.listar()
+            val detalhados = mapearParaDetalhados(listaTreinos, listaExercicios, listaProfessores, listaAlunos)
 
             withContext(Dispatchers.Main) {
-                treinos = listaTreinos
+                treinos = detalhados
                 exercicios = listaExercicios
                 professores = listaProfessores
                 alunos = listaAlunos
@@ -120,7 +145,10 @@ class TreinosViewModel(application: Application) : AndroidViewModel(application)
 
         require(resultado > 0) { "Não foi possível salvar o treino." }
 
-        val treinosAtualizados = withContext(Dispatchers.IO) { treinoDao.listarDetalhados() }
+        val treinosAtualizados = withContext(Dispatchers.IO) {
+            val listaTreinos = treinoDao.listar()
+            mapearParaDetalhados(listaTreinos, exercicios, professores, alunos)
+        }
         treinos = treinosAtualizados
         salvo = true
     }

@@ -1,17 +1,12 @@
 package com.example.evogym.data.model
 
 data class Treino (
-
-    //principal
     val id: Long = 0,
     val exercicioId: Long = 0,
     val professorId: Long = 0,
     val usuarioId: Long? = null,
-
-    //exercicio
     val series: Int,
     val repeticoes: Int
-
 )
 
 data class TreinoDetalhado(

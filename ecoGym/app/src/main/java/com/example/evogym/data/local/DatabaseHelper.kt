@@ -11,7 +11,6 @@ import com.example.evogym.data.model.Equipamento
 import com.example.evogym.data.model.Exercicio
 import com.example.evogym.data.model.Professor
 import com.example.evogym.data.model.Treino
-import com.example.evogym.data.model.TreinoDetalhado
 import com.example.evogym.data.model.UsuarioData
 
 internal class DatabaseHelper(context: Context) :
@@ -398,47 +397,21 @@ internal class DatabaseHelper(context: Context) :
         return db.insert(TABLE_TREINOS, null, valores)
     }
 
-    fun listarTreinosDetalhados(): List<TreinoDetalhado> {
-        val lista = mutableListOf<TreinoDetalhado>()
+    fun listarTreinos(): List<Treino> {
+        val lista = mutableListOf<Treino>()
         val db = readableDatabase
-
-        val sql = """
-            SELECT t.$COL_TREINO_ID, t.$COL_TREINO_EXERCICIO_ID, t.$COL_TREINO_PROFESSOR_ID, t.$COL_TREINO_USUARIO_ID,
-                   t.$COL_TREINO_SERIES, t.$COL_TREINO_REPETICOES,
-                   e.$COL_EXERCICIO_NOME AS exercicio_nome,
-                   p.$COL_PROF_NOME AS professor_nome,
-                   u.$COL_NOME AS usuario_nome
-            FROM $TABLE_TREINOS t
-            LEFT JOIN $TABLE_EXERCICIOS e ON e.$COL_EXERCICIO_ID = t.$COL_TREINO_EXERCICIO_ID
-            LEFT JOIN $TABLE_PROFESSORES p ON p.$COL_PROF_ID = t.$COL_TREINO_PROFESSOR_ID
-            LEFT JOIN $TABLE_USUARIOS u ON u.$COL_ID = t.$COL_TREINO_USUARIO_ID
-        """.trimIndent()
-
-        db.rawQuery(sql, null).use { cursor ->
-            val colId = cursor.getColumnIndexOrThrow(COL_TREINO_ID)
-            val colExercicioId = cursor.getColumnIndexOrThrow(COL_TREINO_EXERCICIO_ID)
-            val colProfessorId = cursor.getColumnIndexOrThrow(COL_TREINO_PROFESSOR_ID)
-            val colUsuarioId = cursor.getColumnIndexOrThrow(COL_TREINO_USUARIO_ID)
-            val colExercicioNome = cursor.getColumnIndexOrThrow("exercicio_nome")
-            val colProfessorNome = cursor.getColumnIndexOrThrow("professor_nome")
-            val colUsuarioNome = cursor.getColumnIndexOrThrow("usuario_nome")
-            val colSeries = cursor.getColumnIndexOrThrow(COL_TREINO_SERIES)
-            val colRepeticoes = cursor.getColumnIndexOrThrow(COL_TREINO_REPETICOES)
-
-            while (cursor.moveToNext()) {
-                lista.add(
-                    TreinoDetalhado(
-                        id = cursor.getLong(colId),
-                        exercicioId = cursor.getLong(colExercicioId),
-                        professorId = cursor.getLong(colProfessorId),
-                        usuarioId = if (cursor.isNull(colUsuarioId)) null else cursor.getLong(colUsuarioId),
-                        exercicioNome = cursor.getString(colExercicioNome) ?: "",
-                        professorNome = cursor.getString(colProfessorNome) ?: "",
-                        usuarioNome = if (cursor.isNull(colUsuarioNome)) null else cursor.getString(colUsuarioNome),
-                        series = cursor.getInt(colSeries),
-                        repeticoes = cursor.getInt(colRepeticoes)
-                    )
-                )
+        val cursor = db.query(
+            TABLE_TREINOS,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "$COL_TREINO_ID DESC"
+        )
+        cursor.use {
+            while (it.moveToNext()) {
+                lista.add(extrairTreino(it))
             }
         }
         return lista
@@ -464,14 +437,15 @@ internal class DatabaseHelper(context: Context) :
     fun listarUsuarios(): List<UsuarioData> {
         val lista = mutableListOf<UsuarioData>()
         val db = readableDatabase
-
-        db.rawQuery("SELECT $COL_ID, $COL_NOME, $COL_EMAIL FROM $TABLE_USUARIOS ORDER BY nome", null).use { cursor ->
-            while (cursor.moveToNext()) {
+        val colunas = arrayOf(COL_ID, COL_NOME, COL_EMAIL)
+        val cursor = db.query(TABLE_USUARIOS, colunas, null, null, null, null, "$COL_NOME ASC")
+        cursor.use {
+            while (it.moveToNext()) {
                 lista.add(
                     UsuarioData(
-                        id = cursor.getLong(cursor.getColumnIndexOrThrow("id")),
-                        nome = cursor.getString(cursor.getColumnIndexOrThrow("nome")),
-                        email = cursor.getString(cursor.getColumnIndexOrThrow("email"))
+                        id = it.getLong(it.getColumnIndexOrThrow(COL_ID)),
+                        nome = it.getString(it.getColumnIndexOrThrow(COL_NOME)),
+                        email = it.getString(it.getColumnIndexOrThrow(COL_EMAIL))
                     )
                 )
             }
@@ -636,6 +610,18 @@ internal class DatabaseHelper(context: Context) :
             nome = cursor.getString(cursor.getColumnIndexOrThrow(COL_PROF_NOME)),
             especialidade = cursor.getString(cursor.getColumnIndexOrThrow(COL_PROF_ESPECIALIDADE)),
             foto = cursor.getString(cursor.getColumnIndexOrThrow(COL_PROF_FOTO))
+        )
+    }
+
+    private fun extrairTreino(cursor: Cursor): Treino {
+        val colUsuarioId = cursor.getColumnIndexOrThrow(COL_TREINO_USUARIO_ID)
+        return Treino(
+            id = cursor.getLong(cursor.getColumnIndexOrThrow(COL_TREINO_ID)),
+            exercicioId = cursor.getLong(cursor.getColumnIndexOrThrow(COL_TREINO_EXERCICIO_ID)),
+            professorId = cursor.getLong(cursor.getColumnIndexOrThrow(COL_TREINO_PROFESSOR_ID)),
+            usuarioId = if (cursor.isNull(colUsuarioId)) null else cursor.getLong(colUsuarioId),
+            series = cursor.getInt(cursor.getColumnIndexOrThrow(COL_TREINO_SERIES)),
+            repeticoes = cursor.getInt(cursor.getColumnIndexOrThrow(COL_TREINO_REPETICOES))
         )
     }
 }

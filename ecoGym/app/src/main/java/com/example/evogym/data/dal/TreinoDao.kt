@@ -3,7 +3,6 @@ package com.example.evogym.data.dal
 import android.content.Context
 import com.example.evogym.data.local.DatabaseHelper
 import com.example.evogym.data.model.Treino
-import com.example.evogym.data.model.TreinoDetalhado
 
 internal class TreinoDao(context: Context) {
     private val appContext = context.applicationContext
@@ -18,8 +17,8 @@ internal class TreinoDao(context: Context) {
         )
     }
 
-    fun listarDetalhados(): List<TreinoDetalhado> = DatabaseHelper(appContext).use { db ->
-        db.listarTreinosDetalhados()
+    fun listar(): List<Treino> = DatabaseHelper(appContext).use { db ->
+        db.listarTreinos()
     }
 
     fun alterar(treino: Treino): Int = DatabaseHelper(appContext).use { db ->
