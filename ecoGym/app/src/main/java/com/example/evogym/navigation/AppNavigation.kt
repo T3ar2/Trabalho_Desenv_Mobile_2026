@@ -19,11 +19,13 @@ import com.example.evogym.ui.screens.HomeScreen
 import com.example.evogym.ui.screens.ListaDeProfessores
 import com.example.evogym.ui.screens.ListaEquipamentosScreen
 import com.example.evogym.ui.screens.ListaExerciciosScreen
+import com.example.evogym.ui.screens.ListaTreinosScreen
 import com.example.evogym.ui.screens.LoginScreen
 import com.example.evogym.ui.screens.PainelUsuarioScreen
 import com.example.evogym.ui.viewmodel.EquipamentosViewModel
 import com.example.evogym.ui.viewmodel.ExerciciosViewModel
 import com.example.evogym.ui.viewmodel.ProfessoresViewModel
+import com.example.evogym.ui.viewmodel.TreinosViewModel
 import com.example.evogym.ui.viewmodel.UsuarioViewModel
 
 @Composable
@@ -84,7 +86,8 @@ fun AppNavigation(navController: NavHostController, modifier: Modifier = Modifie
                 onExerciciosClick = { navController.navigate(ListaExercicios) },
                 onProfessoresClick = { navController.navigate(ListaDeProfessores) },
                 onPerfilClick = { navController.navigate(PainelUsuario) },
-                onEquipamentoClick = { navController.navigate(ListaEquipamentos) }
+                onEquipamentoClick = { navController.navigate(ListaEquipamentos) },
+                onTreinosClick = { navController.navigate(ListaTreinos) }
             )
         }
 
@@ -109,6 +112,14 @@ fun AppNavigation(navController: NavHostController, modifier: Modifier = Modifie
                 modifier = Modifier,
                 onVoltarClick = { navController.popBackStack() },
                 viewModel = viewModel<EquipamentosViewModel>()
+            )
+        }
+
+        composableAutenticado<ListaTreinos> {
+            ListaTreinosScreen(
+                modifier = Modifier,
+                onVoltarClick = { navController.popBackStack() },
+                viewModel = viewModel<TreinosViewModel>()
             )
         }
 

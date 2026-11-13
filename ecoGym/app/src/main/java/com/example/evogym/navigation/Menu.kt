@@ -34,6 +34,12 @@ fun Menu(
             }
 
             TextButton(onClick = {
+                navController.navigate(ListaTreinos)
+            }) {
+                Text("Treinos")
+            }
+
+            TextButton(onClick = {
                 navController.navigate(PainelUsuario)
             }) {
                 Text("Usuário")
