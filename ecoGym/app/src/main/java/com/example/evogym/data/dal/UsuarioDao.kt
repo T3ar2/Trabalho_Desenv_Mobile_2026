@@ -28,6 +28,8 @@ internal class UsuarioDao(context: Context) {
     fun alterarFoto(id: Long, caminho: String?): Int =
         acessar { it.atualizarFoto(id, caminho) }
 
+    fun listar(): List<UsuarioData> = acessar { it.listarUsuarios() }
+
     fun excluir(id: Long): Int = acessar { it.excluirUsuario(id) }
 
     private fun <T> acessar(operacao: (DatabaseHelper) -> T): T = synchronized(bloqueioBanco) {
