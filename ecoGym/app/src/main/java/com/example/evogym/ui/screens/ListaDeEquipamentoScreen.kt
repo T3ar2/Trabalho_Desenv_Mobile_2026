@@ -3,6 +3,7 @@ package com.example.evogym.ui.screens
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -22,7 +24,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -221,15 +222,7 @@ private fun FormularioEquipamento(
                 modifier = Modifier.fillMaxWidth()
             )
             Text("Categoria", fontSize = 12.sp, color = Color.Gray)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                CATEGORIAS.forEach { opcao ->
-                    FilterChip(
-                        selected = categoria == opcao,
-                        onClick = { onCategoriaChange(opcao) },
-                        label = { Text(opcao) }
-                    )
-                }
-            }
+            OpcoesEquipamento(CATEGORIAS, categoria, onCategoriaChange)
             OutlinedTextField(
                 quantidade, onQuantidadeChange,
                 label = { Text("Quantidade") },
@@ -238,18 +231,26 @@ private fun FormularioEquipamento(
                 modifier = Modifier.fillMaxWidth()
             )
             Text("Status", fontSize = 12.sp, color = Color.Gray)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                STATUS.forEach { opcao ->
-                    FilterChip(
-                        selected = status == opcao,
-                        onClick = { onStatusChange(opcao) },
-                        label = { Text(opcao) }
-                    )
-                }
-            }
+            OpcoesEquipamento(STATUS, status, onStatusChange)
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 TextButton(onClick = onCancelar) { Text("Cancelar") }
                 Button(onClick = onSalvar) { Text("Salvar") }
+            }
+        }
+    }
+}
+
+@Composable
+private fun OpcoesEquipamento(opcoes: List<String>, selecionada: String, selecionar: (String) -> Unit) {
+    Row(
+        modifier = Modifier.horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        opcoes.forEach { opcao ->
+            if (opcao == selecionada) {
+                Button(onClick = { selecionar(opcao) }) { Text(opcao) }
+            } else {
+                TextButton(onClick = { selecionar(opcao) }) { Text(opcao) }
             }
         }
     }

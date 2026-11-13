@@ -226,14 +226,6 @@ fun PainelUsuarioScreen(
                     ) {
                         Text("Escolher da galeria", color = AzulEscuro)
                     }
-                    TextButton(
-                        onClick = {
-                            exibirOpcoesFoto = false
-                            seletorArquivo.launch(arrayOf("image/*"))
-                        }
-                    ) {
-                        Text("Escolher em Arquivos", color = AzulEscuro)
-                    }
                     if (usuario.foto != null) {
                         TextButton(
                             onClick = {

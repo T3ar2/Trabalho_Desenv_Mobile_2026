@@ -66,6 +66,5 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.+")
     implementation(libs.retrofit.core)
     implementation(libs.retrofit.converter.gson)
-    implementation(libs.coil.compose)
     implementation(libs.google.play.services.location)
 }
